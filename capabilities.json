@@ -1,0 +1,1 @@
+{"assets":{},"db":{"rules":[{"path":"papers","read":"admin","write":"admin"},{"path":"notes","read":"admin","write":"admin"},{"path":"margins","read":"admin","write":"admin"}]},"downloads":{},"sample":{"images":true},"user":{}}

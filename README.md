@@ -1,0 +1,61 @@
+# Margin Questions
+
+A PDF reader with Claude beside it. You draw a box around an equation, a table or a paragraph, ask a question, and
+the answer is pinned in the margin next to the box. Notes are saved with the paper, an answer can draw a plot with
+Python, and you can export the PDF with your notes written into its margins. It reopens where you stopped reading.
+
+It is a page on claude.ai, and you run your own copy of it on your own account. Its sibling is Model Builder (a
+skill and page that tutor you through building an economic model), and both come from the same author as
+ResearchRoom (a dashboard for an empirical research project).
+
+## Why it needs Claude
+
+The page is a claude.ai artifact and runs only there. Asking the model, saving papers and notes, and storing the
+PDFs are services that claude.ai gives the page; there is no server of its own and no version that runs elsewhere.
+
+## What you need
+
+- A claude.ai account, and Claude Code with artifact publishing (the `Artifact` tool).
+- Python 3, to rebuild the packed files. Standard library only.
+
+## Publish your own copy
+
+1. Clone this repository and rebuild the packed files:
+   ```
+   git clone <this repository's URL> MarginQuestions
+   cd MarginQuestions
+   python3 tools/pack.py
+   ```
+   It downloads Pyodide 0.26.4 (about 60 MB) and writes `py/` and `fonts/note-font.json`. It ends with one `ok` line
+   per file and exits with an error if any file differs from the copy that was tested (`tools/expected.sha256`).
+2. In Claude Code, from this folder, ask:
+
+   > Publish Margin Questions as a new artifact. The page is `index.html`; its capabilities are in
+   > `capabilities.json`. Its supporting files, each at the same path: `py/worker.js`, `py/pyodide.js`,
+   > `py/pyodide.asm.js`, `py/pyodide.asm.wasm`, `py/pyodide-lock.json`, every file in `py/data/`,
+   > `fonts/note-font.json` and `fonts/LICENSE-DejaVu.txt`; and `NOTICE` published as
+   > `NOTICE.txt`. One publish carries at most 64 MB and this is about 65 MB, so leave out the four files in
+   > `py/data/` whose names start with `numpy-` or `matplotlib-3` and send them in a second publish to the same URL.
+
+3. Open the link it gives you. Your copy starts empty.
+
+Your papers, notes and margin answers are stored in your copy only. Its storage rules let only you, and anyone you
+make an editor, read or write them. Sharing the link with a viewer shows them an empty page that cannot save.
+
+## Updating
+
+`git pull`, run `python3 tools/pack.py` again, and republish `index.html` (and any changed file) to the same URL.
+
+## Limits
+
+- Every test ran on one account, the author's. Nothing yet shows that it works on another account.
+- The builder of this repository could not click through a copy on claude.ai: no browser it had was signed in. What
+  was checked: a copy published by the steps above holds the right files, capabilities and empty storage, and the
+  page's libraries load in a browser outside claude.ai. Not clicked through by the builder: opening a PDF, asking
+  about a boxed passage, an answer that draws a plot, saving and reopening, and exporting the PDF with notes. The
+  page's code is the author's own copy, which is in daily use, except that it loads pdf-lib and fontkit from
+  jsDelivr instead of from bundled files.
+
+## Licence
+
+MIT for the page and the script (`LICENSE`). The bundled and rebuilt parts keep their own licences: see `NOTICE`.

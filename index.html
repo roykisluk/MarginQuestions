@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Margin Questions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: notes list on the left, the paper on a grey desk on the right; answers float on the page beside the box you drew. */
+:root {
+  --desk: #e4e6eb;
+  --panel: #f7f8fa;
+  --ink: #1c2230;
+  --muted: #5b6475;
+  --line: #d3d7df;
+  --accent: #2a52be;
+  --accent-soft: rgba(42, 82, 190, .10);
+  --card: #ffffff;
+  --danger: #b3261e;
+  --mark: #2a52be;
+  --ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --prose: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #12151b; --panel: #1a1e26; --ink: #e5e8ef; --muted: #9aa2b3; --line: #2c323d;
+    --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --desk: #12151b; --panel: #1a1e26; --ink: #e5e8ef; --muted: #9aa2b3; --line: #2c323d;
+  --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--desk); color: var(--ink); font: 14px/1.45 var(--ui); overflow: hidden; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: var(--side-w, 290px) 1fr; grid-template-rows: auto 1fr; height: 100%; }
+.app > .side { grid-column: 1; grid-row: 2; position: relative; }
+.app > .viewer { grid-column: 2; grid-row: 2; min-width: 0; }
+.app.no-side { grid-template-columns: 0 1fr; }
+.app.no-side .side, .app.no-side .resizer { display: none; }
+.resizer { grid-column: 1; grid-row: 2; justify-self: end; width: 9px; margin-right: -5px; z-index: 15; cursor: col-resize; position: relative; touch-action: none; }
+.resizer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 4px; width: 1px; background: transparent; transition: background .12s; }
+.resizer:hover::after, .resizer.drag::after { background: var(--accent); width: 2px; left: 3.5px; }
+body.resizing { cursor: col-resize; user-select: none; }
+
+header.bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+  background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { font-weight: 600; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.brand .dot { width: 10px; height: 10px; border: 2px solid var(--accent); border-radius: 2px; }
+.bar .grow { flex: 1; }
+.btn { border: 1px solid var(--line); background: var(--card); border-radius: 6px; padding: 5px 10px; line-height: 1.2; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] .btn.primary { color: #10152a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #10152a; } }
+.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost:hover { background: var(--accent-soft); border-color: transparent; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.icon { position: relative; display: inline-grid; place-items: center; padding: 5px 8px; }
+.btn.icon .badge { position: absolute; top: -6px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #fff; font: 600 10px/16px var(--ui); text-align: center; font-variant-numeric: tabular-nums; }
+.btn.icon.busy svg { animation: pulse 1.1s ease-in-out infinite; }
+select.btn { max-width: 340px; }
+.zoom { display: flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.zoom span { min-width: 46px; text-align: center; color: var(--muted); }
+.hint { color: var(--muted); font-size: 13px; }
+
+.side { background: var(--panel); border-right: 1px solid var(--line); overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.side h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 2px 0; font-weight: 600; }
+.notelist { display: flex; flex-direction: column; gap: 4px; }
+.ni { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 7px 8px; }
+.ni:hover { background: var(--accent-soft); }
+.ni.active { border-color: var(--accent); background: var(--accent-soft); }
+.ni .num { grid-row: span 2; align-self: start; min-width: 22px; height: 22px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 600; display: grid; place-items: center; }
+.ni .pg { font-size: 12px; color: var(--muted); }
+.ni .q { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ni.pending .num { background: var(--muted); }
+.empty-side { color: var(--muted); font-size: 13px; padding: 4px 2px; }
+.opt { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted); }
+
+.viewer { overflow: auto; position: relative; }
+.pages { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 22px 16px 120px; }
+.page { position: relative; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18), 0 6px 20px rgba(0,0,0,.08); flex: none; }
+.page canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.page .pnum { position: absolute; left: -44px; top: 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.overlay { position: absolute; inset: 0; cursor: crosshair; touch-action: none; }
+
+.mark { position: absolute; border: 2px solid var(--mark); background: rgba(42, 82, 190, .07); border-radius: 3px; cursor: pointer; }
+.mark:hover, .mark.open { background: rgba(42, 82, 190, .14); }
+.mark .tag { position: absolute; left: -2px; top: -22px; height: 20px; min-width: 20px; padding: 0 6px; border-radius: 4px 4px 4px 0; background: var(--mark); color: #fff; font: 600 12px/20px var(--ui); text-align: center; }
+.mark.draft { border-style: dashed; cursor: crosshair; }
+.mark.pending .tag::after { content: " …"; }
+
+.card, .composer { position: absolute; z-index: 5; width: 420px; max-width: calc(100% - 16px); background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 34px rgba(0,0,0,.22); cursor: auto; }
+.card.top { z-index: 6; }
+.card header, .composer header { display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 12px; border-bottom: 1px solid var(--line); cursor: grab; user-select: none; }
+.card header .t, .composer header .t { font-weight: 600; font-size: 13px; }
+.card header .s { color: var(--muted); font-size: 12px; }
+.card header .grow { flex: 1; }
+.iconbtn { border: 0; background: transparent; padding: 3px 7px; border-radius: 5px; color: var(--muted); font-size: 13px; }
+.iconbtn:hover { background: var(--accent-soft); color: var(--ink); }
+.iconbtn.warn { color: var(--danger); }
+.thread { max-height: min(62vh, 640px); overflow: auto; padding: 4px 14px 10px; }
+.qa { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.qa:last-child { border-bottom: 0; }
+.qa .q { font-size: 13px; color: var(--muted); margin-bottom: 6px; white-space: pre-wrap; }
+.qa .q b { color: var(--accent); font-weight: 600; }
+.ans { font: 15px/1.6 var(--prose); overflow-wrap: anywhere; }
+.ans p { margin: 0 0 .7em; max-width: 65ch; }
+.ans p:last-child { margin-bottom: 0; }
+.ans ul, .ans ol { margin: 0 0 .7em; padding-left: 1.3em; }
+.ans li { margin: .2em 0; }
+.ans code { font-size: 13px; background: var(--accent-soft); padding: 0 3px; border-radius: 3px; }
+.ans pre { overflow-x: auto; background: var(--accent-soft); padding: 8px; border-radius: 6px; }
+.ans h1, .ans h2, .ans h3, .ans h4 { font: 600 14px/1.3 var(--ui); margin: .9em 0 .4em; }
+.ans mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width: 100%; padding: 2px 0; }
+.ans blockquote { margin: 0 0 .7em; padding-left: 10px; border-left: 3px solid var(--line); color: var(--muted); }
+.thinking { color: var(--muted); font: 14px var(--ui); display: flex; align-items: center; gap: 8px; }
+.thinking::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; transform: scale(.7); } }
+@media (prefers-reduced-motion: reduce) { .thinking::before { animation: none; } }
+.err { color: var(--danger); font-size: 13px; margin-top: 6px; }
+.fig { margin: 10px 0 12px; }
+.fig img { display: block; width: 100%; height: auto; border-radius: 6px; background: #fff; border: 1px solid var(--line); cursor: zoom-in; }
+.fig figcaption { font: 12.5px/1.4 var(--ui); color: var(--muted); margin-top: 5px; }
+.fig details { margin-top: 4px; font: 12px var(--ui); color: var(--muted); }
+.fig summary { cursor: pointer; }
+.fig pre { max-height: 260px; font-size: 12px; }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(10, 12, 18, .78); display: grid; place-items: center; padding: 24px; cursor: zoom-out; }
+.lightbox img { max-width: min(1100px, 100%); max-height: 100%; background: #fff; border-radius: 8px; }
+.pycheck { position: fixed; right: 16px; bottom: 16px; z-index: 70; width: 360px; max-height: 70vh; overflow: auto; background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 8px; padding: 10px 12px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.pycheck .log div { padding: 2px 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+.mnote { position: absolute; z-index: 2; box-sizing: border-box; overflow: hidden; color: rgb(28, 59, 140); background: rgb(243, 246, 253); border: solid rgb(158, 179, 227); font-family: MQNote, "DejaVu Sans Condensed", "Arial Narrow", sans-serif; white-space: pre; cursor: pointer; box-shadow: 0 1px 2px rgba(20, 40, 100, .10); }
+.mnote:hover { background: rgb(232, 238, 252); border-color: rgb(42, 82, 190); }
+.mbar { position: absolute; z-index: 2; width: 0; border-left: solid rgba(51, 84, 184, .9); pointer-events: none; }
+details.opts { margin-top: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+details.opts summary { cursor: pointer; padding: 8px 10px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; display: flex; align-items: center; gap: 6px; user-select: none; }
+details.opts summary::-webkit-details-marker { display: none; }
+details.opts summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
+details.opts[open] summary::before { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { details.opts summary::before { transition: none; } }
+details.opts .optbody { display: flex; flex-direction: column; gap: 10px; padding: 2px 10px 10px; }
+.plotopt { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.qa .by { margin-top: 6px; font-size: 11px; color: var(--muted); text-align: right; letter-spacing: .02em; }
+#modelSel { max-width: 220px; }
+.toggle { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); cursor: pointer; user-select: none; white-space: nowrap; }
+.toggle:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.followup, .composer .body { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--line); }
+.composer .body { border-top: 0; }
+textarea { width: 100%; resize: vertical; min-height: 38px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; background: var(--panel); line-height: 1.4; }
+textarea:focus { border-color: var(--accent); outline: none; }
+textarea.defq::placeholder { color: var(--ink); opacity: .82; }
+.row { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.row .grow { flex: 1; }
+.kbd { font-size: 12px; color: var(--muted); }
+
+.center-msg { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; }
+.center-msg .box { max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.center-msg h1 { font: 600 20px/1.3 var(--ui); margin: 0; text-wrap: balance; }
+.center-msg p { margin: 0; color: var(--muted); }
+.banner { position: sticky; top: 0; z-index: 8; background: var(--accent-soft); border-bottom: 1px solid var(--line); padding: 6px 14px; font-size: 13px; backdrop-filter: blur(6px); }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 8px 14px; border-radius: 8px; font-size: 13px; z-index: 50; max-width: 90vw; }
+input[type=file] { display: none; }
+
+@media (max-width: 820px) {
+  .app { grid-template-columns: 0 1fr; }
+  .app .side { display: none; }
+  .resizer { display: none; }
+  .app.side-open .side { display: flex; position: fixed; z-index: 20; top: 50px; bottom: 0; left: 0; width: 290px; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  .hint { display: none; }
+  .page .pnum { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bar">
+    <button class="btn ghost" id="sideBtn" title="Show or hide the notes list" aria-label="Toggle notes list">☰</button>
+    <div class="brand"><span class="dot" aria-hidden="true"></span>Margin Questions</div>
+    <select class="btn" id="paperSel" aria-label="Paper" hidden></select>
+    <button class="btn" id="openBtn">Open PDF…</button>
+    <div class="zoom">
+      <button class="btn ghost" id="zOut" aria-label="Zoom out">−</button>
+      <span id="zLbl">100%</span>
+      <button class="btn ghost" id="zIn" aria-label="Zoom in">+</button>
+      <button class="btn ghost" id="zFit" title="Fit page width">Fit</button>
+    </div>
+    <button class="btn icon" id="dlBtn" title="Download the PDF with margin notes" aria-label="Download the PDF with margin notes"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M10 3v9m0 0-3.5-3.5M10 12l3.5-3.5M4 14.5v1.5h12v-1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge" id="dlCount" hidden></span></button>
+    <input type="file" id="fileIn" accept="application/pdf,.pdf">
+    <span class="grow"></span>
+    <label class="toggle" title="Short answers: a few sentences, only the key equation"><input type="checkbox" id="concise"> Concise</label>
+    <select class="btn" id="modelSel" aria-label="Model used for answers" title="Model used for new answers">
+      <option value="opus" title="Most careful">Opus 5.5</option>
+      <option value="sonnet" title="Faster">Sonnet 5.5</option>
+    </select>
+  </header>
+  <aside class="side" id="side">
+    <h2 id="notesHead">Notes</h2>
+    <div class="notelist" id="noteList"><div class="empty-side">No notes yet. Drag a box over anything unclear in the paper.</div></div>
+    <details class="opts" id="opts">
+      <summary>Options</summary>
+      <div class="optbody">
+        <label class="opt"><input type="checkbox" id="histDefault" checked> <span>Include my earlier notes on the same page. Helps with follow-ups like “same symbol as before?”</span></label>
+        <label class="opt"><input type="checkbox" id="autoMargin"> <span>Let Claude add a margin note on its own when an answer is worth keeping on the page. Off: only when you ask.</span></label>
+      </div>
+    </details>
+  </aside>
+  <div class="resizer" id="resizer" role="separator" aria-orientation="vertical" aria-label="Resize the notes panel" tabindex="0" title="Drag to resize · double-click to reset"></div>
+  <main class="viewer" id="viewer">
+    <div class="banner" id="banner" hidden></div>
+    <div class="pages" id="pages"></div>
+    <div class="center-msg" id="center"><div class="box"><h1>Loading…</h1></div></div>
+  </main>
+</div>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]], displayMath: [["$$", "$$"], ["\\[", "\\]"]], processEscapes: true },
+  svg: { fontCache: "global" },
+  options: { enableMenu: false },
+  startup: { typeset: false, ready() { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => typesetAllLater()); } }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" async></script>
+<script>
+"use strict";
+/* ---------- setup ---------- */
+const $ = (id) => document.getElementById(id);
+if (!window.pdfjsWorker && window["pdfjs-dist/build/pdf.worker"]) window.pdfjsWorker = window["pdfjs-dist/build/pdf.worker"];
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const S = {
+  db: null, sample: null, assets: null, imagesOK: false, persist: false,
+  papers: [], paper: null, pdf: null, pages: [], scale: 1.3, fitScale: 1.3,
+  notes: new Map(), openIds: new Set(), activeId: null, docText: "",
+  cropCache: new Map(), composer: null, observer: null,
+};
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+$("histDefault").checked = LS.get("mq.hist", true);
+$("histDefault").onchange = (e) => LS.set("mq.hist", e.target.checked);
+
+const MODELS = {
+  opus: { id: "claude-opus-5-5", tier: "complex", label: "Opus 5.5" },
+  sonnet: { id: "claude-sonnet-5-5", tier: "default", label: "Sonnet 5.5" },
+};
+S.model = MODELS[LS.get("mq.model", "opus")] ? LS.get("mq.model", "opus") : "opus";
+$("modelSel").value = S.model;
+$("modelSel").onchange = (e) => { S.model = e.target.value; LS.set("mq.model", S.model); };
+
+S.concise = !!LS.get("mq.concise", false);
+$("concise").checked = S.concise;
+$("concise").onchange = (e) => { S.concise = e.target.checked; LS.set("mq.concise", S.concise); };
+
+S.autoMargin = LS.get("mq.autoMargin2", false) === true;
+$("autoMargin").checked = S.autoMargin;
+$("autoMargin").onchange = (e) => { S.autoMargin = e.target.checked; LS.set("mq.autoMargin2", S.autoMargin); };
+$("dlBtn").onclick = () => exportPdf();
+const MOD = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? "⌘" : "Ctrl+";
+function sendHint(extra) { return "↵ ask" + (S.toolsOK ? ` · ${MOD}↵ ask with a plot` : "") + " · ⇧↵ new line" + (extra || ""); }
+function isSendKey(e) { return e.key === "Enter" && !e.isComposing && !e.shiftKey && !e.altKey; }
+function wantsPlotKey(e) { return !!(S.toolsOK && (e.metaKey || e.ctrlKey)); }
+
+function toast(msg, ms = 4200) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function centerMsg(title, text, withOpen) {
+  const c = $("center"); c.hidden = false;
+  c.innerHTML = `<div class="box"><h1>${esc(title)}</h1>${text ? `<p>${esc(text)}</p>` : ""}${withOpen ? '<button class="btn primary" id="centerOpen">Open a PDF</button>' : ""}</div>`;
+  if (withOpen) $("centerOpen").onclick = () => $("fileIn").click();
+}
+function hideCenter() { $("center").hidden = true; }
+function banner(text) { const b = $("banner"); b.hidden = !text; b.textContent = text || ""; }
+
+/* ---------- markdown + math ---------- */
+let typesetChain = Promise.resolve();
+function typeset(el) {
+  if (!window.MathJax || !MathJax.typesetPromise) return;
+  typesetChain = typesetChain.then(() => (el.isConnected ? MathJax.typesetPromise([el]) : null)).catch(() => {});
+}
+function typesetAllLater() { document.querySelectorAll(".ans").forEach((el) => typeset(el)); }
+const MATH_RE = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|(?<![\\$])\$(?![\s$])(?:[^$\n\\]|\\.)+?(?<!\s)\$)/g;
+const FIG_RE = /\[\[\s*fig(?:ure)?\s*(\d+)\s*\]\]/gi;
+function figSrc(f) { return f.src || (f.assetId ? "/_blob/" + f.assetId : f.dataUrl || ""); }
+function figureHTML(f) {
+  if (!f) return "";
+  const src = figSrc(f);
+  const img = src ? `<img src="${esc(src)}" alt="${esc(f.caption || "Figure " + f.n)}" loading="lazy">` : `<div class="err">This figure wasn't saved.</div>`;
+  return `<figure class="fig" data-fig="${f.n}">${img}${f.caption ? `<figcaption>${esc(f.caption)}</figcaption>` : ""}`
+    + (f.code ? `<details><summary>Python code</summary><pre><code>${esc(f.code)}</code></pre></details>` : "") + `</figure>`;
+}
+function renderMD(el, src, doTypeset = true, figs) {
+  const maths = [];
+  let masked = String(src).replace(MATH_RE, (m) => { maths.push(m); return `@@MQ${maths.length - 1}@@`; });
+  const used = new Set();
+  masked = masked.replace(FIG_RE, (_, k) => `\n\n@@FIG${k}@@\n\n`);
+  let html = window.marked ? marked.parse(masked, { gfm: true, breaks: false }) : esc(masked).replace(/\n/g, "<br>");
+  if (window.DOMPurify) html = DOMPurify.sanitize(html);
+  html = html.replace(/@@MQ(\d+)@@/g, (_, i) => esc(maths[+i]));
+  html = html.replace(/<p>\s*@@FIG(\d+)@@\s*<\/p>|@@FIG(\d+)@@/g, (_, a, b) => {
+    const k = +(a || b); const f = (figs || []).find((x) => x.n === k);
+    if (!f) return ""; used.add(k); return figureHTML(f);
+  });
+  for (const f of figs || []) if (!used.has(f.n)) html += figureHTML(f);
+  el.innerHTML = html;
+  if (doTypeset) typeset(el);
+}
+/* click a figure to see it large */
+document.addEventListener("click", (e) => {
+  const img = e.target instanceof Element && e.target.closest(".fig img");
+  if (!img) return;
+  const box = document.createElement("div"); box.className = "lightbox"; box.title = "Click to close";
+  const big = document.createElement("img"); big.src = img.src; big.alt = img.alt;
+  box.appendChild(big); box.onclick = () => box.remove();
+  document.body.appendChild(box);
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".lightbox").forEach((b) => b.remove()); });
+
+/* ---------- capabilities ---------- */
+async function initCaps() {
+  const use = window.claude && window.claude.use ? (n) => window.claude.use(n).catch(() => null) : async () => null;
+  const [sample, db, assets] = await Promise.all([use("sample"), use("db"), use("assets")]);
+  S.sample = sample; S.db = db; S.assets = assets;
+  if (sample && sample.limits) {
+    try { const lim = await sample.limits(); S.imagesOK = !!(lim && lim.images); S.toolsOK = !!(lim && lim.tools); } catch { S.imagesOK = false; S.toolsOK = false; }
+  }
+  S.persist = !!(db);
+}
+
+/* ---------- papers ---------- */
+async function loadPapers() {
+  if (!S.db) return [];
+  let timer;
+  const timeout = new Promise((res) => { timer = setTimeout(() => res("timeout"), 10000); });
+  const got = await Promise.race([S.db.collection("papers").get().catch((e) => ({ err: e })), timeout]);
+  clearTimeout(timer);
+  if (got === "timeout") { banner("Your saved papers can't be reached right now. Try reloading in a minute."); return []; }
+  if (got.err) { return []; }
+  return got.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+function fillPaperSelect() {
+  const sel = $("paperSel");
+  sel.hidden = S.papers.length === 0;
+  sel.innerHTML = S.papers.map((p) => `<option value="${esc(p.id)}">${esc(p.name || "Untitled PDF")}</option>`).join("");
+  if (S.paper) sel.value = S.paper.id;
+}
+$("paperSel").onchange = (e) => { const p = S.papers.find((x) => x.id === e.target.value); if (p) openPaper(p); };
+$("openBtn").onclick = () => $("fileIn").click();
+$("fileIn").onchange = async (e) => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  const buf = await f.arrayBuffer();
+  const name = f.name.replace(/\.pdf$/i, "");
+  if (S.persist && S.assets) {
+    centerMsg("Saving your PDF…", "So your notes and the file stay together.");
+    try {
+      const up = await S.assets.upload(f, { type: "application/pdf" });
+      const paper = { id: uid("p"), name, assetId: up.id, createdAt: Date.now() };
+      await S.db.collection("papers").doc(paper.id).set({ name: paper.name, assetId: paper.assetId, createdAt: paper.createdAt });
+      S.papers.unshift(paper); fillPaperSelect();
+      await openPaper(paper, buf);
+      return;
+    } catch (err) {
+      toast("Couldn't save the PDF here (" + (err && err.code || "error") + "). Opened it for this visit only.");
+    }
+  }
+  await openPaper({ id: uid("local"), name, local: true }, buf);
+};
+
+async function openPaper(paper, buf) {
+  closeComposer();
+  S.restoring = true; clearTimeout(posTimer); clearTimeout(posRemoteTimer);
+  S.pages = [];
+  S.paper = paper; S.notes.clear(); S.openIds.clear(); S.cropCache.clear(); S.activeId = null;
+  LS.set("mq.last", paper.id);
+  fillPaperSelect();
+  document.title = (paper.name ? paper.name + " · " : "") + "Margin Questions";
+  $("pages").innerHTML = "";
+  centerMsg("Opening " + (paper.name || "PDF") + "…");
+  try {
+    if (!buf) {
+      const r = await fetch("/_blob/" + paper.assetId);
+      if (!r.ok) throw new Error("The PDF file is missing (" + r.status + ").");
+      buf = await r.arrayBuffer();
+    }
+    if (S.pdf) { try { S.pdf.destroy(); } catch {} }
+    S.pdfBytes = new Uint8Array(buf.slice(0));
+    S.pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
+  } catch (err) {
+    centerMsg("This PDF didn't open", String(err && err.message || err), true);
+    return;
+  }
+  hideCenter();
+  banner(paper.local ? (S.persist ? "This PDF is open for this visit only, so its notes won't be saved." : "Notes won't be saved on this view. Open the page from Claude to keep them.") : "");
+  await buildPages();
+  extractText();
+  S.restoring = true;
+  const restored = restorePos(paper);
+  await loadNotes();
+  await loadMargins();
+  if (!restored) goToLatestNote();
+  setTimeout(() => { S.restoring = false; }, 400);
+}
+
+/* ---------- margin notes (written on the paper, exported into the PDF) ---------- */
+const MN = { fs: 6.4, lh: 1.28, padX: 3.4, padY: 2.6, edge: 9, gap: 6, minW: 44, base: 0.93, radius: 2.2, barGap: 3.5,
+  ink: [0.11, 0.23, 0.55], fill: [0.953, 0.965, 0.992], stroke: [0.62, 0.70, 0.89], bar: [0.20, 0.33, 0.72], maxPerAnswer: 3 };
+S.margins = new Map();
+let noteFontBytes = null, noteFontReady = null, FK = null;
+function loadNoteFont() {
+  if (noteFontReady) return noteFontReady;
+  noteFontReady = (async () => {
+    if (!window.fontkit) await loadScript("https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js");
+    const r = await fetch(new URL("fonts/note-font.json", location.href));
+    if (!r.ok) throw new Error("font " + r.status);
+    const bin = atob(await r.json());
+    const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    noteFontBytes = u;
+    FK = window.fontkit.create(u);
+    const ff = new FontFace("MQNote", u.buffer.slice(0));
+    await ff.load(); document.fonts.add(ff);
+  })().catch((e) => { noteFontReady = null; throw e; });
+  return noteFontReady;
+}
+/* widths from the font file itself, so the screen and the PDF break lines identically */
+function measureNote(s) {
+  if (!FK) return s.length * MN.fs * 0.48;
+  let w = 0; for (const g of FK.layout(s).glyphs) w += g.advanceWidth;
+  return (w / FK.unitsPerEm) * MN.fs;
+}
+/* characters the font lacks (some sub/superscripts) become _x or ^x */
+const SUB = /[₀-ₜᵢ-ᵪⱼ]/, SUP = /[⁰-ⁿᴬ-ᵟᶜ-ᶿʰ-˿]/;
+function noteText(s) {
+  s = String(s).replace(/\$+/g, "").replace(/\\([a-zA-Z]+)/g, "$1");
+  if (!FK) return s;
+  let out = "";
+  for (const ch of s) {
+    const cp = ch.codePointAt(0);
+    if (cp < 128 || ch === "\n" || FK.hasGlyphForCodePoint(cp)) { out += ch; continue; }
+    const base = ch.normalize("NFKC");
+    const ok = base !== ch && [...base].every((c) => FK.hasGlyphForCodePoint(c.codePointAt(0)));
+    out += ok ? (SUB.test(ch) ? "_" : SUP.test(ch) ? "^" : "") + base : "?";
+  }
+  return out.replace(/([_^])(\w)(?=[_^]\w)/g, "$1$2"); // keep runs like _ij readable
+}
+/* the text block's edges, per line: lines (LTR or RTL) start or end at the block edge */
+function computeTextBounds() {
+  const mins = [], maxs = [];
+  for (const p of S.pages) {
+    const rows = new Map();
+    for (const it of p.items) {
+      if (!it.s || !it.s.trim() || it.w <= 0) continue;
+      const k = Math.round(it.y * 300);
+      const r = rows.get(k) || { a: 1, b: 0, n: 0 };
+      r.a = Math.min(r.a, it.x); r.b = Math.max(r.b, it.x + it.w); r.n += it.s.length; rows.set(k, r);
+    }
+    for (const r of rows.values()) if (r.n >= 25) { mins.push(r.a); maxs.push(r.b); }
+  }
+  const q = (arr, f) => { const s = [...arr].sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.max(0, Math.floor(f * (s.length - 1))))] : null; };
+  const minX = q(mins, 0.1), maxX = q(maxs, 0.9);
+  S.textBounds = minX != null && maxX != null && minX < maxX && minX > 0.02 && maxX < 0.98 ? { minX, maxX } : { minX: 0.118, maxX: 0.882 };
+}
+function marginBox(p, side) {
+  const b = S.textBounds || { minX: 0.118, maxX: 0.882 };
+  const x0 = side === "left" ? MN.edge : b.maxX * p.w + MN.barGap + 4;
+  const x1 = side === "left" ? b.minX * p.w - MN.barGap - 4 : p.w - MN.edge;
+  return { x: x0, w: x1 - x0 };
+}
+function pickSide(p, wanted) {
+  const L = marginBox(p, "left").w, R = marginBox(p, "right").w;
+  if (wanted === "left" && L >= MN.minW) return "left";
+  if (wanted === "right" && R >= MN.minW) return "right";
+  return L > R + 4 ? "left" : "right";
+}
+function wrapText(text, w, measure) {
+  const out = [];
+  for (const para of String(text).replace(/\r/g, "").split("\n")) {
+    let line = "";
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const t = line ? line + " " + word : word;
+      if (measure(t) <= w) { line = t; continue; }
+      if (line) out.push(line);
+      if (measure(word) <= w) { line = word; continue; }
+      let chunk = "";
+      for (const ch of word) { if (measure(chunk + ch) > w && chunk) { out.push(chunk); chunk = ch; } else chunk += ch; }
+      line = chunk;
+    }
+    out.push(line);
+  }
+  return out.filter((l, i, a) => l || (i > 0 && i < a.length - 1));
+}
+/* one layout for the screen and the exported PDF (units: PDF points, y from the top) */
+function layoutMargins(p) {
+  const list = [...S.margins.values()].filter((m) => m.page === p.num).sort((a, b) => a.y1 - b.y1 || a.createdAt - b.createdAt);
+  const lh = MN.fs * MN.lh, out = [], bottom = { left: 0, right: 0 };
+  for (const m of list) {
+    const side = pickSide(p, m.side);
+    const box = marginBox(p, side);
+    const w = Math.max(30, box.w);
+    const lines = wrapText(noteText(m.text), w - 2 * MN.padX, measureNote);
+    const h = Math.max(1, lines.length) * lh + 2 * MN.padY;
+    const top = Math.max(m.y1 * p.h - MN.padY, bottom[side] + MN.gap);
+    out.push({ m, side, x: box.x, w, top, h, lines,
+      barX: side === "left" ? box.x + box.w + MN.barGap : box.x - MN.barGap, y1: m.y1 * p.h, y2: Math.max(m.y2 * p.h, m.y1 * p.h + 3) });
+    bottom[side] = top + h;
+  }
+  for (const side of ["left", "right"]) { // keep the last notes on the page
+    let limit = p.h - 14;
+    for (const L of out.filter((o) => o.side === side).reverse()) {
+      if (L.top + L.h > limit) L.top = Math.max(4, limit - L.h);
+      limit = L.top - MN.gap;
+    }
+  }
+  return out;
+}
+/* where CSS puts the baseline inside a line box: half-leading + ascent */
+function baselineOffset() {
+  const asc = FK ? FK.ascent / FK.unitsPerEm : 0.928, desc = FK ? -FK.descent / FK.unitsPerEm : 0.236;
+  return ((MN.lh - (asc + desc)) / 2 + asc) * MN.fs;
+}
+function cssRGB(c, a) { return `rgba(${c.map((v) => Math.round(v * 255)).join(",")},${a == null ? 1 : a})`; }
+function renderMargins(p) {
+  if (!p) return;
+  p.overlay.querySelectorAll(".mnote, .mbar").forEach((e) => e.remove());
+  const lay = layoutMargins(p);
+  if (!lay.length) return;
+  const k = p.el.clientWidth / p.w; // px per point at the current zoom
+  const lh = MN.fs * MN.lh;
+  for (const L of lay) {
+    const bar = document.createElement("div"); bar.className = "mbar";
+    Object.assign(bar.style, { left: L.barX * k + "px", top: L.y1 * k + "px", height: (L.y2 - L.y1) * k + "px", borderLeftWidth: Math.max(1, 0.9 * k) + "px" });
+    const el = document.createElement("div"); el.className = "mnote";
+    Object.assign(el.style, { left: L.x * k + "px", top: L.top * k + "px", width: L.w * k + "px", height: L.h * k + "px",
+      padding: `${MN.padY * k}px ${MN.padX * k}px`, fontSize: MN.fs * k + "px", lineHeight: lh * k + "px",
+      borderRadius: MN.radius * k + "px", borderWidth: Math.max(1, 0.6 * k) + "px" });
+    el.title = (L.m.by === "claude" ? "Margin note by Claude" : "Your margin note") + " · click to edit";
+    for (const t of L.lines) { const d = document.createElement("div"); d.textContent = t || " "; el.appendChild(d); }
+    el.addEventListener("pointerdown", (e) => e.stopPropagation());
+    el.onclick = (e) => { e.stopPropagation(); openMarginEditor(L.m); };
+    p.overlay.append(bar, el);
+  }
+}
+function renderAllMargins() { if (!S.margins.size) return; loadNoteFont().catch(() => {}).finally(() => S.pages.forEach(renderMargins)); }
+async function loadMargins() {
+  S.margins.clear();
+  if (!S.db || S.paper.local) return;
+  try {
+    const got = await S.db.collection("margins").where("paperId", "==", S.paper.id).get();
+    for (const d of got.docs) { const m = { id: d.id, ...JSON.parse(JSON.stringify(d.data())) }; if (m.text && m.page) S.margins.set(m.id, m); }
+  } catch { /* margins are optional */ }
+  updateMarginCount();
+  renderAllMargins();
+}
+function saveMargin(m) {
+  if (!S.db || !S.paper || S.paper.local) return;
+  const body = { paperId: m.paperId, noteId: m.noteId || "", page: m.page, y1: m.y1, y2: m.y2, side: m.side, text: m.text, by: m.by, createdAt: m.createdAt };
+  m.saving = (m.saving || Promise.resolve()).then(() => S.db.collection("margins").doc(m.id).set(body)).catch(() => toast("A margin note didn't save."));
+}
+function deleteMargin(m) {
+  S.margins.delete(m.id);
+  if (S.db && S.paper && !S.paper.local) m.saving = (m.saving || Promise.resolve()).then(() => S.db.collection("margins").doc(m.id).delete()).catch(() => {});
+  renderMargins(S.pages[m.page - 1]); updateMarginCount();
+}
+function addMargin(n, text, side, by) {
+  const center = n.rect.x + n.rect.w / 2;
+  const m = { id: uid("m"), paperId: S.paper.id, noteId: n.id, page: n.page, y1: n.rect.y, y2: n.rect.y + n.rect.h,
+    side: side === "left" || side === "right" ? side : pickSide(S.pages[n.page - 1], center < 0.4 ? "left" : "right"), text: String(text).trim(), by, createdAt: Date.now() };
+  S.margins.set(m.id, m);
+  saveMargin(m); updateMarginCount();
+  loadNoteFont().catch(() => {}).finally(() => renderMargins(S.pages[m.page - 1]));
+  return m;
+}
+function updateMarginCount() {
+  const k = S.margins.size;
+  const t = k ? `Download the PDF with ${k} margin note${k === 1 ? "" : "s"}` : "Download the PDF (no margin notes yet)";
+  $("dlBtn").title = t; $("dlBtn").setAttribute("aria-label", t);
+  $("dlCount").hidden = !k; $("dlCount").textContent = k;
+}
+function openMarginEditor(m) {
+  document.querySelectorAll(".meditor").forEach((e) => e.remove());
+  const p = S.pages[m.page - 1];
+  const el = document.createElement("div"); el.className = "composer meditor";
+  el.innerHTML = `
+    <header><span class="t">Margin note</span><span class="s" style="color:var(--muted);font-size:12px">p. ${m.page} · ${m.by === "claude" ? "by Claude" : "yours"}</span><span style="flex:1"></span><button class="iconbtn" data-x="x" aria-label="Close">✕</button></header>
+    <div class="body">
+      <label for="mtext" class="kbd">Text written in the margin. Plain text; symbols like θ λ ≥ work.</label>
+      <textarea id="mtext" rows="4"></textarea>
+      <div class="row"><span class="kbd grow">Side:</span>
+        <label class="plotopt"><input type="radio" name="mside" value="left"> Left</label>
+        <label class="plotopt"><input type="radio" name="mside" value="right"> Right</label></div>
+      <div class="row"><button class="btn" data-x="del" style="color:var(--danger)">Delete</button><span class="grow"></span>
+        <button class="btn" data-x="x">Cancel</button><button class="btn primary" data-x="save">Save</button></div>
+    </div>`;
+  p.overlay.appendChild(el);
+  stopDrawing(el);
+  el.querySelector("#mtext").value = m.text;
+  el.querySelector(`input[value="${m.side}"]`).checked = true;
+  positionBox(el, p, { x: m.side === "left" ? 0.02 : 0.6, y: m.y1, w: 0.36, h: m.y2 - m.y1 }, null);
+  const close = () => el.remove();
+  el.querySelectorAll('[data-x="x"]').forEach((b) => (b.onclick = close));
+  el.querySelector('[data-x="del"]').onclick = () => { deleteMargin(m); close(); };
+  el.querySelector('[data-x="save"]').onclick = () => {
+    const t = el.querySelector("#mtext").value.trim();
+    if (!t) { deleteMargin(m); close(); return; }
+    m.text = t; m.side = el.querySelector('input[name="mside"]:checked').value;
+    saveMargin(m); renderMargins(p); close();
+  };
+  el.querySelector("#mtext").addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  setTimeout(() => el.querySelector("#mtext").focus({ preventScroll: true }), 0);
+}
+function makeMarginTool(n, counter) {
+  return {
+    name: "add_margin_note",
+    description: "Write a short note into the paper's margin, beside the area the reader marked. It is drawn in the margin on screen and included in the PDF the reader downloads. Returns 'ok'.",
+    inputSchema: { type: "object", properties: {
+      text: { type: "string", description: "The note: under 25 words, plain text, Unicode symbols (θ, λᵢ, β, ≥), no LaTeX or Markdown." },
+      side: { type: "string", enum: ["left", "right"], description: "Optional. Which margin. Leave out to choose automatically." } }, required: ["text"] },
+    async execute(input) {
+      const text = String(input.text || "").replace(/\$+/g, "").replace(/\\([a-zA-Z]+)/g, "$1").trim();
+      if (!text) throw new Error("The note text was empty.");
+      if (counter.k >= MN.maxPerAnswer) throw new Error("Limit reached: at most " + MN.maxPerAnswer + " margin notes per answer.");
+      counter.k++;
+      addMargin(n, text.slice(0, 400), input.side, "claude");
+      setStatus(n, "Margin note added. Writing…");
+      return "ok: the note is now in the margin next to the marked area.";
+    },
+  };
+}
+const PDFLIB_SRC = ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js", "https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"];
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("couldn't load " + src)); document.head.appendChild(s); });
+}
+async function exportPdf() {
+  const btn = $("dlBtn");
+  if (!S.pdfBytes || !S.pages.length) return;
+  const downloads = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+  if (!downloads) { toast("Downloads aren't available in this view. Open the page inside Claude."); return; }
+  btn.disabled = true; btn.classList.add("busy"); btn.title = "Preparing the PDF…";
+  try {
+    if (!window.PDFLib) await loadScript(PDFLIB_SRC[0]);
+    await loadNoteFont();
+    const { PDFDocument, rgb } = PDFLib;
+    const doc = await PDFDocument.load(S.pdfBytes.slice(0), { ignoreEncryption: true });
+    doc.registerFontkit(window.fontkit);
+    const font = await doc.embedFont(noteFontBytes, { subset: true });
+    const lh = MN.fs * MN.lh;
+    for (const p of S.pages) {
+      const lay = layoutMargins(p); if (!lay.length) continue;
+      const pg = doc.getPage(p.num - 1); const cb = pg.getCropBox();
+      const sx = cb.width / p.w, sy = cb.height / p.h;
+      const X = (x) => cb.x + x * sx, Y = (y) => cb.y + cb.height - y * sy;
+      for (const L of lay) {
+        pg.drawLine({ start: { x: X(L.barX), y: Y(L.y1) }, end: { x: X(L.barX), y: Y(L.y2) }, thickness: 0.9, color: rgb(...MN.bar), opacity: 0.9 });
+        const w = L.w * sx, h = L.h * sy, r = MN.radius;
+        const path = `M ${r} 0 H ${w - r} Q ${w} 0 ${w} ${r} V ${h - r} Q ${w} ${h} ${w - r} ${h} H ${r} Q 0 ${h} 0 ${h - r} V ${r} Q 0 0 ${r} 0 Z`;
+        pg.drawSvgPath(path, { x: X(L.x), y: Y(L.top), color: rgb(...MN.fill), borderColor: rgb(...MN.stroke), borderWidth: 0.6 });
+        L.lines.forEach((t, i) => { if (t) pg.drawText(t, { x: X(L.x + MN.padX), y: Y(L.top + MN.padY + i * lh + baselineOffset()), size: MN.fs, font, color: rgb(...MN.ink) }); });
+      }
+    }
+    const bytes = await doc.save();
+    const name = (S.paper.name || "paper").replace(/[\\/:*?"<>|]+/g, " ").slice(0, 120) + " (margin notes).pdf";
+    await downloads.save({ filename: name, data: new Blob([bytes], { type: "application/pdf" }) });
+    toast("PDF saved with your margin notes.");
+  } catch (e) {
+    if (e && e.code === "declined") { /* the viewer said no */ }
+    else toast("The PDF couldn't be made: " + (e && (e.message || e.code) || "error"));
+  } finally { btn.disabled = false; btn.classList.remove("busy"); updateMarginCount(); }
+}
+
+/* ---------- remember where you were reading ---------- */
+function currentPos() {
+  const v = $("viewer");
+  // only measure a laid-out, visible page list (hidden or mid-switch layouts read as "end of paper")
+  if (!S.pages.length || document.hidden || !v.clientHeight || !S.pages[0].el.isConnected || !S.pages[0].el.clientHeight) return null;
+  const y = v.scrollTop + 60;
+  let p = S.pages[0];
+  for (const q of S.pages) { if (q.el.offsetTop <= y) p = q; else break; }
+  if (!p || !p.el.clientHeight) return null;
+  return { page: p.num, f: Math.max(0, Math.min(1, (y - p.el.offsetTop) / p.el.clientHeight)), t: Date.now() };
+}
+function scrollToPos(page, f) {
+  const p = S.pages[page - 1]; if (!p) return;
+  $("viewer").scrollTop = Math.max(0, p.el.offsetTop + f * p.el.clientHeight - 60);
+}
+function restorePos(paper) {
+  const local = LS.get("mq.pos." + paper.id, null);
+  const remote = paper.lastPos && typeof paper.lastPos.page === "number" ? paper.lastPos : null;
+  const ok = (q) => q && typeof q.page === "number" && q.page >= 1 && q.page <= S.pages.length && typeof q.f === "number" && q.f < 0.999;
+  const pos = [local, remote].filter(ok).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  if (!pos) return false;
+  scrollToPos(pos.page, pos.f || 0);
+  return true;
+}
+function goToLatestNote() {
+  let best = null;
+  for (const n of S.notes.values()) { const t = n.updatedAt || n.createdAt || 0; if (!best || t > (best.updatedAt || best.createdAt || 0)) best = n; }
+  if (best) scrollToPos(best.page, Math.max(0, best.rect.y - 0.04));
+}
+let posTimer = null, posRemoteTimer = null, posWriting = Promise.resolve();
+function onScrolled() {
+  if (S.restoring || !S.paper || !S.pages.length) return;
+  clearTimeout(posTimer);
+  const paper = S.paper;
+  posTimer = setTimeout(() => {
+    if (S.restoring || S.paper !== paper) return;
+    const pos = currentPos(); if (!pos) return;
+    LS.set("mq.pos." + paper.id, pos);
+    clearTimeout(posRemoteTimer);
+    posRemoteTimer = setTimeout(() => savePosRemote(pos, paper), 2500);
+  }, 500);
+}
+function savePosRemote(pos, paper) {
+  paper = paper || S.paper;
+  if (!S.db || !paper || paper.local || !pos) return;
+  const old = paper.lastPos;
+  if (old && old.page === pos.page && Math.abs((old.f || 0) - pos.f) < 0.05) return;
+  paper.lastPos = pos;
+  posWriting = posWriting.then(() => S.db.collection("papers").doc(paper.id).update({ lastPos: pos })).catch(() => {});
+}
+$("viewer").addEventListener("scroll", onScrolled, { passive: true });
+document.addEventListener("visibilitychange", () => {
+  // the layout may already be gone once hidden, so flush the last good position instead of measuring
+  if (document.visibilityState === "hidden" && S.paper && !S.restoring) {
+    const pos = LS.get("mq.pos." + S.paper.id, null);
+    if (pos && posRemoteTimer) { clearTimeout(posRemoteTimer); posRemoteTimer = null; savePosRemote(pos, S.paper); }
+  }
+});
+
+/* ---------- pages ---------- */
+async function buildPages() {
+  const wrap = $("pages");
+  wrap.innerHTML = "";
+  S.pages = [];
+  if (S.observer) S.observer.disconnect();
+  S.observer = new IntersectionObserver((ents) => {
+    for (const en of ents) if (en.isIntersecting) renderPage(S.pages[+en.target.dataset.i]);
+  }, { root: $("viewer"), rootMargin: "800px 0px" });
+  const first = await S.pdf.getPage(1);
+  const vw = $("viewer").clientWidth - 40;
+  const v1 = first.getViewport({ scale: 1 });
+  S.fitScale = Math.max(0.6, Math.min(2.2, vw / v1.width));
+  S.scale = LS.get("mq.scale", null) || Math.min(S.fitScale, 1.6);
+  for (let i = 1; i <= S.pdf.numPages; i++) {
+    const page = i === 1 ? first : await S.pdf.getPage(i);
+    const vp1 = page.getViewport({ scale: 1 });
+    const el = document.createElement("div");
+    el.className = "page"; el.dataset.i = i - 1; el.id = "page-" + i;
+    el.innerHTML = `<span class="pnum">p. ${i}</span><canvas></canvas><div class="overlay" data-page="${i}"></div>`;
+    wrap.appendChild(el);
+    const info = { num: i, page, w: vp1.width, h: vp1.height, el, canvas: el.querySelector("canvas"), overlay: el.querySelector(".overlay"), renderedAt: 0, task: null, items: [], text: "" };
+    S.pages.push(info);
+    bindOverlay(info);
+    S.observer.observe(el);
+  }
+  applyScale();
+}
+function applyScale() {
+  $("zLbl").textContent = Math.round(S.scale * 100) + "%";
+  for (const p of S.pages) {
+    p.el.style.width = Math.round(p.w * S.scale) + "px";
+    p.el.style.height = Math.round(p.h * S.scale) + "px";
+    p.renderedAt = 0;
+  }
+  // render visible ones again
+  const vr = $("viewer").getBoundingClientRect();
+  for (const p of S.pages) {
+    const r = p.el.getBoundingClientRect();
+    if (r.bottom > vr.top - 800 && r.top < vr.bottom + 800) renderPage(p);
+  }
+  for (const id of S.openIds) placeCard(S.notes.get(id));
+  if (S.composer) placeComposer();
+  if (S.margins && S.margins.size) S.pages.forEach(renderMargins);
+}
+async function renderPage(p) {
+  if (!p || p.renderedAt === S.scale) return;
+  const scale = S.scale;
+  p.renderedAt = scale;
+  if (p.task) { try { p.task.cancel(); } catch {} }
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const vp = p.page.getViewport({ scale: scale * dpr });
+  const c = document.createElement("canvas");
+  c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  p.task = p.page.render({ canvasContext: ctx, viewport: vp });
+  try { await p.task.promise; } catch { return; }
+  if (p.renderedAt !== scale) return;
+  p.canvas.replaceWith(c); p.canvas = c;
+}
+function setScale(s) {
+  const pos = S.pages.length ? currentPos() : null;
+  S.scale = Math.max(0.5, Math.min(3.5, s)); LS.set("mq.scale", S.scale);
+  applyScale();
+  if (pos) scrollToPos(pos.page, pos.f);
+}
+$("zIn").onclick = () => setScale(S.scale * 1.15);
+$("zOut").onclick = () => setScale(S.scale / 1.15);
+$("zFit").onclick = () => { LS.set("mq.scale", null); setScale(S.fitScale); LS.set("mq.scale", null); };
+/* resizable notes panel */
+const SIDE = { min: 200, max: 640, def: 290 };
+function setSideW(w, save) {
+  w = Math.round(Math.max(SIDE.min, Math.min(Math.min(SIDE.max, window.innerWidth - 360), w)));
+  $("app").style.setProperty("--side-w", w + "px");
+  if (save) LS.set("mq.sideW", w);
+}
+setSideW(LS.get("mq.sideW", SIDE.def), false);
+LS.get("mq.sideHidden", false) && $("app").classList.add("no-side");
+(() => {
+  const r = $("resizer"); let st = null;
+  r.addEventListener("pointerdown", (e) => { e.preventDefault(); st = { x: e.clientX, w: $("side").getBoundingClientRect().width }; r.setPointerCapture(e.pointerId); r.classList.add("drag"); document.body.classList.add("resizing"); });
+  r.addEventListener("pointermove", (e) => { if (st) setSideW(st.w + e.clientX - st.x, false); });
+  const end = () => { if (!st) return; st = null; r.classList.remove("drag"); document.body.classList.remove("resizing"); setSideW($("side").getBoundingClientRect().width, true); };
+  r.addEventListener("pointerup", end); r.addEventListener("pointercancel", end);
+  r.addEventListener("dblclick", () => setSideW(SIDE.def, true));
+  r.addEventListener("keydown", (e) => {
+    const w = $("side").getBoundingClientRect().width;
+    if (e.key === "ArrowLeft") { e.preventDefault(); setSideW(w - 20, true); }
+    if (e.key === "ArrowRight") { e.preventDefault(); setSideW(w + 20, true); }
+  });
+})();
+$("sideBtn").onclick = () => {
+  const app = $("app");
+  if (window.matchMedia("(max-width: 820px)").matches) app.classList.toggle("side-open");
+  else LS.set("mq.sideHidden", app.classList.toggle("no-side"));
+  setTimeout(() => { for (const id of S.openIds) placeCard(S.notes.get(id)); }, 0);
+};
+
+/* ---------- text ---------- */
+async function extractText() {
+  const parts = [];
+  for (const p of S.pages) {
+    try {
+      const tc = await p.page.getTextContent();
+      const vp1 = p.page.getViewport({ scale: 1 });
+      let txt = "";
+      p.items = tc.items.filter((it) => "str" in it).map((it) => {
+        const [x, y] = vp1.convertToViewportPoint(it.transform[4], it.transform[5]);
+        txt += it.str + (it.hasEOL ? "\n" : "");
+        return { s: it.str, x: x / p.w, y: y / p.h, w: (it.width || 0) / p.w, h: (it.height || 10) / p.h, eol: it.hasEOL };
+      });
+      p.text = txt.replace(/[ \t]+\n/g, "\n").trim();
+    } catch { p.text = ""; }
+    parts.push(`[Page ${p.num}]\n${p.text}`);
+  }
+  S.docText = parts.join("\n\n");
+  computeTextBounds();
+  renderAllMargins();
+}
+function regionText(p, r) {
+  const out = [];
+  for (const it of p.items) {
+    const cx = it.x + it.w / 2, cy = it.y - it.h / 2;
+    if (cx >= r.x - 0.005 && cx <= r.x + r.w + 0.005 && cy >= r.y - 0.005 && cy <= r.y + r.h + 0.005) out.push(it.s + (it.eol ? "\n" : " "));
+  }
+  return out.join("").replace(/ +/g, " ").trim();
+}
+
+/* ---------- drawing a box ---------- */
+function bindOverlay(p) {
+  const ov = p.overlay;
+  let start = null, draft = null;
+  ov.addEventListener("pointerdown", (e) => {
+    if (e.target !== ov || e.button !== 0) return;
+    e.preventDefault();
+    closeComposer(true);
+    const b = ov.getBoundingClientRect();
+    start = { x: (e.clientX - b.left) / b.width, y: (e.clientY - b.top) / b.height };
+    draft = document.createElement("div"); draft.className = "mark draft";
+    ov.appendChild(draft);
+    ov.setPointerCapture(e.pointerId);
+    upd(e);
+  });
+  function rectFrom(e) {
+    const b = ov.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - b.left) / b.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - b.top) / b.height));
+    return { x: Math.min(x, start.x), y: Math.min(y, start.y), w: Math.abs(x - start.x), h: Math.abs(y - start.y) };
+  }
+  function upd(e) { const r = rectFrom(e); setBox(draft, r); }
+  ov.addEventListener("pointermove", (e) => { if (start) upd(e); });
+  ov.addEventListener("pointerup", (e) => {
+    if (!start) return;
+    const r = rectFrom(e); start = null;
+    const b = ov.getBoundingClientRect();
+    if (r.w * b.width < 12 || r.h * b.height < 10) { draft.remove(); draft = null; return; }
+    openComposer(p, r, draft); draft = null;
+  });
+  ov.addEventListener("pointercancel", () => { start = null; if (draft) draft.remove(); draft = null; });
+}
+function setBox(el, r) {
+  el.style.left = r.x * 100 + "%"; el.style.top = r.y * 100 + "%";
+  el.style.width = r.w * 100 + "%"; el.style.height = r.h * 100 + "%";
+}
+
+/* ---------- composer ---------- */
+function openComposer(p, rect, draftEl) {
+  const num = nextNum();
+  const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = num; draftEl.appendChild(tag);
+  const el = document.createElement("div");
+  el.className = "composer";
+  const canAsk = !!S.sample;
+  el.innerHTML = `
+    <header><span class="t">Note ${num}</span><span class="s" style="color:var(--muted);font-size:12px">p. ${p.num}</span><span class="grow" style="flex:1"></span><button class="iconbtn" data-x="cancel" aria-label="Cancel">✕</button></header>
+    <div class="body">
+      <label for="cq" class="kbd">What's unclear here?</label>
+      <textarea id="cq" class="defq" rows="3" placeholder="${esc(DEFAULT_Q)}"></textarea>
+      <div class="row"><span class="kbd grow" data-hint="c">${sendHint(" · Esc to cancel")}</span>
+        <button class="btn" data-x="cancel">Cancel</button>
+        <button class="btn primary" data-x="ask" title="${S.toolsOK ? MOD + "↵ asks with a plot" : ""}" ${canAsk ? "" : "disabled"}>Ask Claude</button></div>
+      ${canAsk ? "" : '<div class="err">Asking Claude only works when this page is opened inside Claude.</div>'}
+    </div>`;
+  p.overlay.appendChild(el);
+  S.composer = { p, rect, el, draftEl, num };
+  placeComposer();
+  stopDrawing(el);
+  const ta = el.querySelector("#cq");
+  setTimeout(() => ta.focus({ preventScroll: true }), 0);
+  el.querySelectorAll('[data-x="cancel"]').forEach((b) => (b.onclick = () => closeComposer(true)));
+  const go = (plot) => {
+    if (!S.sample) return;
+    const q = ta.value.trim() || DEFAULT_Q;
+    const useHistory = $("histDefault").checked;
+    plot = !!plot;
+    const c = S.composer; closeComposer(false);
+    c.draftEl.remove();
+    createNote(c.p, c.rect, c.num, q, useHistory, plot);
+  };
+  el.querySelector('[data-x="ask"]').onclick = () => go(false);
+  ta.addEventListener("keydown", (e) => {
+    if (isSendKey(e)) { e.preventDefault(); go(wantsPlotKey(e)); }
+    if (e.key === "Escape") { e.preventDefault(); closeComposer(true); }
+  });
+  dragByHeader(el, el.querySelector("header"), p, null);
+}
+function placeComposer() {
+  const c = S.composer; if (!c) return;
+  positionBox(c.el, c.p, c.rect, null);
+}
+function closeComposer(removeDraft) {
+  const c = S.composer; if (!c) return;
+  c.el.remove(); if (removeDraft) c.draftEl.remove();
+  S.composer = null;
+}
+function stopDrawing(el) { ["pointerdown", "pointerup", "pointermove"].forEach((t) => el.addEventListener(t, (e) => e.stopPropagation())); }
+const DEFAULT_Q = "Explain this in plain words";
+function nextNum() { let m = 0; for (const n of S.notes.values()) m = Math.max(m, n.num || 0); return m + 1; }
+
+/* position a card/composer next to its box, inside the page */
+function positionBox(el, p, rect, pos) {
+  const W = p.el.clientWidth, H = p.el.clientHeight;
+  const cw = Math.min(420, W - 16);
+  el.style.width = cw + "px";
+  if (pos) { el.style.left = Math.max(-cw + 60, Math.min(W - 60, pos.x * W)) + "px"; el.style.top = Math.max(0, pos.y * H) + "px"; return; }
+  const r = { l: rect.x * W, t: rect.y * H, r: (rect.x + rect.w) * W, b: (rect.y + rect.h) * H };
+  let left, top;
+  if (r.r + 12 + cw <= W) { left = r.r + 12; top = r.t; }
+  else if (r.l - 12 - cw >= 0) { left = r.l - 12 - cw; top = r.t; }
+  else { left = Math.max(8, Math.min(W - cw - 8, r.l)); top = r.b + 10; }
+  el.style.left = left + "px"; el.style.top = Math.max(0, top) + "px";
+}
+function dragByHeader(el, handle, p, note) {
+  let st = null;
+  handle.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    e.preventDefault();
+    st = { x: e.clientX, y: e.clientY, l: el.offsetLeft, t: el.offsetTop };
+    handle.setPointerCapture(e.pointerId); handle.style.cursor = "grabbing";
+    if (note) bringFront(note);
+  });
+  handle.addEventListener("pointermove", (e) => {
+    if (!st) return;
+    el.style.left = st.l + e.clientX - st.x + "px"; el.style.top = Math.max(0, st.t + e.clientY - st.y) + "px";
+  });
+  handle.addEventListener("pointerup", () => {
+    if (!st) return; st = null; handle.style.cursor = "";
+    if (note) {
+      note.pos = { x: el.offsetLeft / p.el.clientWidth, y: el.offsetTop / p.el.clientHeight };
+      save(note);
+    }
+  });
+}
+
+/* ---------- notes ---------- */
+async function loadNotes() {
+  renderList();
+  if (!S.db || S.paper.local) return;
+  let timer;
+  const timeout = new Promise((res) => { timer = setTimeout(() => res("timeout"), 10000); });
+  const got = await Promise.race([S.db.collection("notes").where("paperId", "==", S.paper.id).get().catch((e) => ({ err: e })), timeout]);
+  clearTimeout(timer);
+  if (got === "timeout") { banner("Your saved notes can't be reached right now. New notes may not save."); return; }
+  if (got.err) { banner("Your saved notes didn't load (" + (got.err.code || "error") + ")."); return; }
+  for (const d of got.docs) {
+    const n = { id: d.id, ...JSON.parse(JSON.stringify(d.data())) };
+    if (!n.messages || !n.rect || !n.page) continue;
+    S.notes.set(n.id, n);
+    drawMark(n);
+  }
+  renderList();
+}
+function createNote(p, rect, num, question, useHistory, plot) {
+  const n = { id: uid("n"), paperId: S.paper.id, page: p.num, rect, num, messages: [], useHistory, createdAt: Date.now() };
+  S.notes.set(n.id, n);
+  drawMark(n);
+  openCard(n);
+  ask(n, question, plot);
+}
+function drawMark(n) {
+  const p = S.pages[n.page - 1]; if (!p) return;
+  if (n.markEl) n.markEl.remove();
+  const m = document.createElement("div");
+  m.className = "mark"; setBox(m, n.rect);
+  m.innerHTML = `<span class="tag">${n.num}</span>`;
+  m.title = "Note " + n.num + " — click to show or hide";
+  m.addEventListener("pointerdown", (e) => e.stopPropagation());
+  m.onclick = (e) => { e.stopPropagation(); S.openIds.has(n.id) ? closeCard(n) : openCard(n); };
+  p.overlay.appendChild(m);
+  n.markEl = m;
+  syncMarkState(n);
+}
+function syncMarkState(n) {
+  if (!n.markEl) return;
+  n.markEl.classList.toggle("open", S.openIds.has(n.id));
+  n.markEl.classList.toggle("pending", !!n.pending);
+}
+function bringFront(n) {
+  document.querySelectorAll(".card.top").forEach((c) => c.classList.remove("top"));
+  if (n.cardEl) n.cardEl.classList.add("top");
+  S.activeId = n.id; renderList();
+}
+function openCard(n) {
+  S.openIds.add(n.id);
+  if (!n.cardEl) buildCard(n);
+  placeCard(n); bringFront(n); syncMarkState(n);
+}
+function closeCard(n) {
+  S.openIds.delete(n.id);
+  if (n.cardEl) { n.cardEl.remove(); n.cardEl = null; }
+  if (S.activeId === n.id) S.activeId = null;
+  syncMarkState(n); renderList();
+}
+function placeCard(n) { if (!n || !n.cardEl) return; const p = S.pages[n.page - 1]; positionBox(n.cardEl, p, n.rect, n.pos); }
+function buildCard(n) {
+  const p = S.pages[n.page - 1];
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <header><span class="t">Note ${n.num}</span><span class="s">p. ${n.page}</span><span class="grow"></span>
+      ${S.toolsOK ? '<button class="iconbtn" data-x="margin" title="Ask Claude to write a short note in the paper\'s margin">+ Margin</button>' : ""}
+      <button class="iconbtn" data-x="copy" title="Copy the answer">Copy</button>
+      <button class="iconbtn" data-x="del" title="Delete this note">Delete</button>
+      <button class="iconbtn" data-x="close" title="Hide (the box stays)" aria-label="Hide">—</button></header>
+    <div class="thread"></div>
+    <div class="followup">
+      <textarea rows="1" placeholder="Ask a follow-up…" aria-label="Follow-up question"></textarea>
+      <div class="row"><span class="kbd grow" data-hint="f">${sendHint()}</span>
+        <button class="btn" data-x="stop" hidden>Stop</button>
+        <button class="btn" data-x="retry" hidden>Retry</button>
+        <button class="btn primary" data-x="send" title="${S.toolsOK ? MOD + "↵ asks with a plot" : ""}">Ask</button></div>
+    </div>`;
+  p.overlay.appendChild(el);
+  stopDrawing(el);
+  el.addEventListener("pointerdown", () => bringFront(n));
+  n.cardEl = el;
+  const ta = el.querySelector("textarea");
+  const send = (plot) => {
+    const q = ta.value.trim(); if (!q || n.pending || !S.sample) return;
+    ta.value = ""; ask(n, q, !!plot);
+  };
+  el.querySelector('[data-x="send"]').onclick = () => send(false);
+  ta.addEventListener("keydown", (e) => { if (isSendKey(e)) { e.preventDefault(); send(wantsPlotKey(e)); } if (e.key === "Escape") closeCard(n); });
+  el.querySelector('[data-x="close"]').onclick = () => closeCard(n);
+  el.querySelector('[data-x="stop"]').onclick = () => n.ctl && n.ctl.abort();
+  el.querySelector('[data-x="retry"]').onclick = () => { if (!n.pending) runAsk(n); };
+  const mb = el.querySelector('[data-x="margin"]');
+  if (mb) mb.onclick = () => { if (!n.pending && S.sample) ask(n, "Write a short margin note for this spot, based on what we discussed.", false); };
+  el.querySelector('[data-x="copy"]').onclick = async () => {
+    const last = [...n.messages].reverse().find((m) => m.role === "assistant");
+    try { await navigator.clipboard.writeText(last ? last.content : ""); toast("Answer copied (Markdown with LaTeX)."); } catch { toast("Copy didn't work here."); }
+  };
+  const del = el.querySelector('[data-x="del"]');
+  del.onclick = () => {
+    if (!del.dataset.armed) { del.dataset.armed = "1"; del.textContent = "Delete?"; del.classList.add("warn"); setTimeout(() => { delete del.dataset.armed; del.textContent = "Delete"; del.classList.remove("warn"); }, 3000); return; }
+    deleteNote(n);
+  };
+  dragByHeader(el, el.querySelector("header"), p, n);
+  renderThread(n);
+}
+function renderThread(n) {
+  const el = n.cardEl; if (!el) return;
+  const th = el.querySelector(".thread");
+  const pairs = [];
+  for (let i = 0; i < n.messages.length; i++) {
+    const m = n.messages[i];
+    if (m.role === "user") pairs.push({ q: m.content, a: null, by: "", figs: [] });
+    else if (pairs.length) { const pr = pairs[pairs.length - 1]; pr.a = m.content; pr.by = m.model || ""; pr.figs = m.figures || []; }
+  }
+  th.innerHTML = "";
+  pairs.forEach((pr, i) => {
+    const d = document.createElement("div"); d.className = "qa";
+    const q = document.createElement("div"); q.className = "q";
+    q.innerHTML = `<b>${i === 0 ? "You asked" : "Follow-up"}:</b> ` + esc(pr.q || "(explain this passage)");
+    const a = document.createElement("div"); a.className = "ans";
+    d.append(q, a); th.appendChild(d);
+    const isLast = i === pairs.length - 1;
+    if (pr.a && pr.by) { const by = document.createElement("div"); by.className = "by"; by.textContent = pr.by; d.appendChild(by); }
+    if (pr.a) renderMD(a, pr.a, true, pr.figs);
+    else if (isLast && n.pending) {
+      if (n.streaming || (n.liveFigs && n.liveFigs.length)) renderMD(a, n.streaming || "", true, n.liveFigs);
+      const st = document.createElement("div"); st.className = "thinking";
+      st.textContent = n.status || "Thinking… careful answers can take up to a minute.";
+      d.appendChild(st);
+      n.liveEl = a; n.statusEl = st;
+    } else if (isLast) {
+      a.innerHTML = `<div class="err">${esc(n.error || "No answer yet.")}</div>`;
+    }
+  });
+  const pending = !!n.pending;
+  const lastIsUser = n.messages.length && n.messages[n.messages.length - 1].role === "user";
+  el.querySelector('[data-x="stop"]').hidden = !pending;
+  el.querySelector('[data-x="retry"]').hidden = pending || !lastIsUser || !S.sample;
+  el.querySelector('[data-x="send"]').disabled = pending || !S.sample;
+  if (pending) th.scrollTop = th.scrollHeight;
+}
+function deleteNote(n) {
+  if (n.ctl) n.ctl.abort();
+  closeCard(n);
+  if (n.markEl) n.markEl.remove();
+  S.notes.delete(n.id);
+  renderList();
+  if (S.db && !S.paper.local) {
+    n.saving = (n.saving || Promise.resolve()).then(() => S.db.collection("notes").doc(n.id).delete()).catch(() => toast("Couldn't delete the saved copy."));
+  }
+}
+function save(n) {
+  if (!S.db || !S.paper || S.paper.local) return;
+  n.updatedAt = Date.now();
+  const body = { paperId: n.paperId, page: n.page, rect: n.rect, num: n.num, messages: n.messages, useHistory: !!n.useHistory, createdAt: n.createdAt, updatedAt: n.updatedAt };
+  if (n.pos) body.pos = n.pos;
+  n.saving = (n.saving || Promise.resolve()).then(() => S.db.collection("notes").doc(n.id).set(body)).catch((e) => {
+    toast(e && e.code === "quota_exceeded" ? "Storage is full, so this note wasn't saved." : "This note didn't save. It stays here until you reload.");
+  });
+}
+function renderList() {
+  const list = $("noteList");
+  const notes = [...S.notes.values()].sort((a, b) => a.page - b.page || a.rect.y - b.rect.y);
+  $("notesHead").textContent = notes.length ? `Notes (${notes.length})` : "Notes";
+  if (!notes.length) { list.innerHTML = '<div class="empty-side">No notes yet. Drag a box over anything unclear in the paper.</div>'; return; }
+  list.innerHTML = "";
+  for (const n of notes) {
+    const b = document.createElement("button");
+    b.className = "ni" + (n.id === S.activeId ? " active" : "") + (n.pending ? " pending" : "");
+    const q = (n.messages[0] && n.messages[0].content) || "Explain this passage";
+    b.innerHTML = `<span class="num">${n.num}</span><span class="pg">Page ${n.page}${n.messages.length > 2 ? " · " + Math.ceil(n.messages.length / 2) + " questions" : ""}</span><span class="q">${esc(q)}</span>`;
+    b.onclick = () => {
+      openCard(n);
+      const p = S.pages[n.page - 1];
+      const v = $("viewer");
+      const top = p.el.offsetTop + n.rect.y * p.el.clientHeight - 90;
+      v.scrollTo({ top, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      $("app").classList.remove("side-open");
+    };
+    list.appendChild(b);
+  }
+}
+
+/* ---------- Python (Pyodide in a background worker) ---------- */
+const PY_WORKER_URL = "py/worker.js"; // Python runs from the artifact's own files
+const PY = { worker: null, ready: false, loadError: null, broken: null, stage: "", startedAt: 0, seq: 0, pending: new Map(), listeners: new Set() };
+function pyLog(msg) { try { console.log("[MQ-py] " + msg); } catch {} PY.listeners.forEach((f) => f(msg)); }
+function pyWorker() {
+  if (PY.worker) return PY.worker;
+  PY.ready = false; PY.loadError = null; PY.stage = "starting"; PY.startedAt = Date.now();
+  let w;
+  try { w = new Worker(new URL(PY_WORKER_URL, location.href)); }
+  catch (e) { PY.loadError = "Python can't start in this view."; return null; }
+  w.onmessage = (e) => {
+    const d = e.data;
+    if (d.type === "progress") { PY.stage = d.msg; pyLog(d.msg + " (" + Math.round((Date.now() - PY.startedAt) / 1000) + " s)"); return; }
+    if (d.type === "ready") { PY.ready = true; pyLog("ready after " + Math.round((Date.now() - PY.startedAt) / 1000) + " s"); return; }
+    if (d.type === "loadError") { PY.loadError = d.error; PY.broken = d.error; pyLog("load error: " + d.error); failAll("Python couldn't load: " + d.error); return; }
+    const done = PY.pending.get(d.id); if (done) { PY.pending.delete(d.id); done(d); }
+  };
+  w.onerror = (e) => { PY.loadError = e.message || "the browser blocked it"; PY.broken = PY.loadError; pyLog("worker error: " + PY.loadError); failAll("Python couldn't start: " + PY.loadError); resetPy(); };
+  PY.worker = w;
+  return w;
+}
+function failAll(msg) { for (const [, done] of PY.pending) done({ ok: false, error: msg }); PY.pending.clear(); }
+function resetPy() { if (PY.worker) { try { PY.worker.terminate(); } catch {} } PY.worker = null; PY.ready = false; }
+function runPython(code, signal) {
+  return new Promise((resolve) => {
+    if (PY.broken) return resolve({ ok: false, fatal: true, error: "Python can't run in this browser: " + PY.broken });
+    const w = pyWorker();
+    if (!w) return resolve({ ok: false, error: PY.loadError || "Python can't start here." });
+    const id = ++PY.seq;
+    const limit = PY.ready ? 45000 : 75000;
+    const finish = (r) => { clearTimeout(timer); signal && signal.removeEventListener("abort", onAbort); resolve(r); };
+    const wasReady = PY.ready;
+    const timer = setTimeout(() => {
+      PY.pending.delete(id);
+      if (!wasReady && !PY.ready) { PY.broken = "loading stalled at: " + (PY.stage || "start"); pyLog("timeout: " + PY.broken); resetPy(); finish({ ok: false, fatal: true, error: "Python didn't finish loading in " + Math.round(limit / 1000) + " s (" + PY.broken + ")." }); return; }
+      resetPy(); finish({ ok: false, error: `Timed out after ${Math.round(limit / 1000)} s. Make the code simpler and faster.` });
+    }, limit);
+    const onAbort = () => { PY.pending.delete(id); resetPy(); finish({ ok: false, error: "Stopped." }); };
+    if (signal) signal.addEventListener("abort", onAbort);
+    PY.pending.set(id, finish);
+    w.postMessage({ id, code });
+  });
+}
+function b64ToBlob(b64, type) {
+  const bin = atob(b64); const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type });
+}
+function blobToDataURL(blob) { return new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(""); r.readAsDataURL(blob); }); }
+const PLOT_WORDS = /\b(plot|plots|plotting|graph|graphs|chart|visuali[sz]e|visual|draw|sketch|diagram|illustrate)\b/i;
+function setStatus(n, s) { n.status = s; if (n.statusEl && n.statusEl.isConnected) n.statusEl.textContent = s; }
+function makePlotTool(n, figs, rerender) {
+  return {
+    name: "plot",
+    description: "Run Python code that draws ONE matplotlib figure for the reader. Only numpy and matplotlib are available (no scipy, sympy or pandas). Do not call plt.show() or save files: the last figure is captured automatically. Returns 'ok' with the figure number, or the Python error to fix.",
+    inputSchema: { type: "object", properties: {
+      code: { type: "string", description: "Complete Python code that builds the figure." },
+      caption: { type: "string", description: "One short sentence saying what the figure shows." } }, required: ["code"] },
+    async execute(input, ctx) {
+      const code = String(input.code || "");
+      const caption = String(input.caption || "");
+      if (!code.trim()) throw new Error("No code was given.");
+      const tick = setInterval(() => {
+        if (!PY.ready) setStatus(n, "Starting Python: " + (PY.stage || "starting") + " · " + Math.round((Date.now() - PY.startedAt) / 1000) + " s");
+      }, 1000);
+      setStatus(n, PY.ready ? "Running Python…" : "Starting Python…");
+      const r = await runPython(code, ctx && ctx.signal);
+      clearInterval(tick);
+      if (!r.ok && r.fatal) {
+        setStatus(n, "Python isn't available here. Claude will answer in words.");
+        throw new Error(r.error + " This is a problem with the reader's browser, not your code. Do NOT call the plot tool again. Answer in words, and say briefly at the start that the plot could not be drawn.");
+      }
+      if (!r.ok) {
+        setStatus(n, "The plot code hit an error. Claude is fixing it…");
+        throw new Error((r.error || "Unknown error").slice(-2500) + (r.out ? "\nPrinted output:\n" + r.out.slice(-800) : ""));
+      }
+      const blob = b64ToBlob(r.png, "image/png");
+      const k = figs.length + 1;
+      const fig = { n: k, caption, code, src: URL.createObjectURL(blob) };
+      figs.push(fig);
+      if (S.assets && S.paper && !S.paper.local) {
+        try { const up = await S.assets.upload(blob, { type: "image/png" }); fig.assetId = up.id; } catch { /* keep in memory */ }
+      }
+      if (!fig.assetId && blob.size < 150000) fig.dataUrl = await blobToDataURL(blob);
+      setStatus(n, "Figure ready. Writing the answer…");
+      rerender();
+      return `ok: figure ${k} is ready${r.out ? ". Printed output:\n" + r.out.slice(-1500) : ""}. Put [[figure ${k}]] on its own line where it belongs in your answer.`;
+    },
+  };
+}
+const PLOT_RULES = `
+
+The reader asked for a visual. Use the plot tool to draw it with Python. Only numpy and matplotlib are available: no scipy, sympy or pandas, so solve equations with numpy (for example a simple bisection or fixed-point loop).
+- Plot what helps the explanation most: the key function, a comparative static, a numerical example of the mechanism. Pick illustrative parameter values and say they are illustrative.
+- One figure per tool call; at most 2 figures. Keep the default figure size and colors.
+- Label axes in plain words. Use the paper's notation in labels and titles via matplotlib mathtext, like r'$\\theta$'.
+- If the tool returns an error, fix the code and call it again (at most 2 retries).
+- In your answer, put [[figure 1]] on its own line where the figure belongs, then say in words what it shows and what to notice.`;
+
+/* ---------- asking Claude ---------- */
+async function cropBlob(n) {
+  if (S.cropCache.has(n.id)) return S.cropCache.get(n.id);
+  const p = S.pages[n.page - 1];
+  const pad = 0.012;
+  const r = { x: Math.max(0, n.rect.x - pad), y: Math.max(0, n.rect.y - pad) };
+  r.w = Math.min(1 - r.x, n.rect.w + 2 * pad); r.h = Math.min(1 - r.y, n.rect.h + 2 * pad);
+  let sc = Math.min(5, Math.max(2.5, 1500 / (r.w * p.w)));
+  while (p.w * sc * p.h * sc > 2.6e7) sc *= 0.85;
+  const vp = p.page.getViewport({ scale: sc });
+  const full = document.createElement("canvas");
+  full.width = Math.floor(vp.width); full.height = Math.floor(vp.height);
+  const fctx = full.getContext("2d"); fctx.fillStyle = "#fff"; fctx.fillRect(0, 0, full.width, full.height);
+  await p.page.render({ canvasContext: fctx, viewport: vp }).promise;
+  const out = document.createElement("canvas");
+  out.width = Math.max(1, Math.round(r.w * full.width)); out.height = Math.max(1, Math.round(r.h * full.height));
+  out.getContext("2d").drawImage(full, r.x * full.width, r.y * full.height, out.width, out.height, 0, 0, out.width, out.height);
+  const blob = await new Promise((res) => out.toBlob(res, "image/png"));
+  S.cropCache.set(n.id, blob);
+  return blob;
+}
+function buildFirstTurn(n) {
+  const p = S.pages[n.page - 1];
+  const region = regionText(p, n.rect);
+  let earlier = "";
+  if (n.useHistory) {
+    const others = [...S.notes.values()].filter((o) => o.id !== n.id && o.page === n.page && o.num < n.num && o.messages.some((m) => m.role === "assistant"))
+      .sort((a, b) => a.num - b.num).slice(-6);
+    if (others.length) {
+      earlier = others.map((o) => {
+        const q = o.messages[0].content || "(explain this passage)";
+        const a = (o.messages.find((m) => m.role === "assistant") || {}).content || "";
+        return `Note ${o.num} — marked text: "${regionText(p, o.rect).slice(0, 400)}"\nQuestion: ${q}\nAnswer given: ${a.slice(0, 1500)}`;
+      }).join("\n\n");
+    }
+  }
+  const paper = S.docText.length > 150000 ? S.docText.slice(0, 150000) + "\n[… rest of the paper cut for length]" : S.docText;
+  const imgLine = S.imagesOK
+    ? `The attached image is the marked area, cropped from page ${n.page}. Trust the image for equations and symbols; the extracted text below often garbles math.`
+    : `No image is available this time. Use the extracted text of the marked area below; it may garble math, so say so if that blocks you.`;
+  return `You are helping a reader understand a draft research paper in economics. The reader printed it, marked unclear spots with a pen, and is now asking about one marked spot.
+
+<paper title="${S.paper.name || "Untitled"}">
+${paper}
+</paper>
+
+<marked_area page="${n.page}">
+${region || "(no extractable text — rely on the image)"}
+</marked_area>
+${earlier ? `\n<earlier_notes_on_this_page>\n${earlier}\n</earlier_notes_on_this_page>\n` : ""}
+${imgLine}
+
+How to answer:
+- Answer the question directly first, in one or two sentences. Then explain.
+- Use short, clear sentences and simple words. The reader is an economics PhD student, so do not over-explain basic economics.
+- Whenever you write an equation, say in words what it means and what each new symbol stands for.
+- Write math in LaTeX: $...$ inline, $$...$$ on its own line. Do not use code blocks for math.
+- Use the paper's own notation. Say where a symbol or assumption is defined (section or equation number) when you can.
+- If the passage seems wrong or unclear in the draft itself (a typo, a sign error, a missing assumption, a step that does not follow), say so plainly and say why.
+${S.concise
+  ? "- BE CONCISE: answer in 2 to 4 short sentences, about 80 words at most. Give only the key point. Show at most one equation, and still say in a few words what it means. No lists, no headings, no derivations unless the question asks for one."
+  : "- Keep it compact, usually under 250 words, unless the question needs a derivation."}
+- No preamble, no restating the question.${marginRules(n)}
+
+The reader's question about the marked area: ${n.messages[0].content || "(none — explain what the marked passage says and why it is there)"}`;
+}
+function marginRules(n) {
+  if (!S.toolsOK) return "";
+  const here = [...S.margins.values()].filter((m) => m.page === n.page).map((m) => `- "${m.text}"`).join("\n");
+  return `
+
+Margin notes: with the add_margin_note tool you can write a short note into the paper's margin, beside the marked area. It is drawn in blue ink on the page and included in the PDF the reader downloads.
+- ${S.autoMargin
+    ? "Add one when the reader asks for it, or when your answer yields one thing worth keeping on the page for the next reading: what a symbol means, a definition, a typo or a missing assumption. Most answers need none. At most one per answer unless the reader asks for more."
+    : "Add one ONLY when the reader asks for a margin note."}
+- Under 25 words. Plain text only: no LaTeX, no Markdown, no $ signs. Write symbols in Unicode (θ, λᵢ, β, ρ, ≥, →).
+- Write it like a pen note in the margin: terse, no full sentences needed, e.g. "ρ = 1/β − 1: discount rate implied by β".
+- If you add one, end your answer with one short line saying so.${here ? `\n- Margin notes already on this page (do not repeat them):\n${here}` : ""}`;
+}
+function buildInput(n) {
+  const turns = n.messages.map((m) => ({ role: m.role, content: m.content || " " }));
+  turns[0] = { role: "user", content: buildFirstTurn(n) };
+  const last = turns.length - 1;
+  if (last > 0 && turns[last].role === "user") {
+    turns[last] = { role: "user", content: turns[last].content + (S.concise ? "\n\n(Answer concisely: 2 to 4 short sentences.)" : "\n\n(Answer at normal length.)") };
+  }
+  if (wantsPlot(n)) turns[last] = { role: "user", content: turns[last].content + PLOT_RULES };
+  // earlier figures: tell Claude what they showed, in words
+  n.messages.forEach((m, i) => {
+    if (m.role === "assistant" && m.figures && m.figures.length) {
+      turns[i] = { role: "assistant", content: turns[i].content.replace(FIG_RE, (_, k) => {
+        const f = m.figures.find((x) => x.n === +k); return `[figure ${k} was shown: ${f && f.caption ? f.caption : "a plot"}]`; }) };
+    }
+  });
+  return turns;
+}
+function wantsPlot(n) {
+  const m = n.messages[n.messages.length - 1];
+  return !!(S.toolsOK && !PY.broken && m && m.role === "user" && (m.plot || PLOT_WORDS.test(m.content || "")));
+}
+function errText(code) {
+  switch (code) {
+    case "not_granted": case "sampling_disabled": case "not_declared": case "capability_disabled": case "capability_removed":
+      return "Claude isn't allowed on this page. Reload and choose Allow when asked.";
+    case "rate_limited": return "Too many questions at once, or you've hit your usage limit. Wait a bit, then press Retry.";
+    case "session_expired": return "You've been signed out. Sign in again, then press Retry.";
+    case "image_rejected": return "The marked area couldn't be sent as an image. Try a smaller box.";
+    case "refused": return "Claude declined this one. Try rewording the question.";
+    case "prompt_too_large": return "The paper is too long to send in full. Try a shorter PDF.";
+    case "cancelled": return "Stopped.";
+    default: return "Something went wrong on the way. Press Retry.";
+  }
+}
+function withFigs(msg, figs) {
+  if (figs && figs.length) {
+    msg.figures = figs.map((f) => {
+      const o = { n: f.n, caption: f.caption || "", code: f.code || "" };
+      if (f.assetId) o.assetId = f.assetId; else if (f.dataUrl) o.dataUrl = f.dataUrl;
+      Object.defineProperty(o, "src", { value: f.src, enumerable: false, writable: true }); // in-memory only
+      return o;
+    });
+  }
+  return msg;
+}
+function ask(n, question, plot) {
+  const msg = { role: "user", content: question };
+  if (plot) msg.plot = true;
+  n.messages.push(msg);
+  save(n);
+  runAsk(n);
+}
+async function runAsk(n) {
+  if (!S.sample) return;
+  const plot = wantsPlot(n);
+  const figs = [];
+  n.pending = true; n.streaming = ""; n.error = null; n.ctl = new AbortController(); n.liveFigs = figs;
+  n.status = plot ? "Thinking about the plot… this can take a minute." : "";
+  if (plot) pyWorker(); // start loading Python while Claude thinks
+  syncMarkState(n); renderThread(n); renderList();
+  let lastTypeset = 0;
+  const rerender = () => { if (n.liveEl && n.liveEl.isConnected) renderMD(n.liveEl, n.streaming || "", true, figs); };
+  try {
+    const M = MODELS[S.model] || MODELS.opus;
+    const opts = { model: M.id, modelTier: M.tier, cache: false, signal: n.ctl.signal,
+      onText: ({ text }) => {
+        n.streaming = text;
+        setStatus(n, "Writing…");
+        if (n.liveEl && n.liveEl.isConnected) {
+          const now = Date.now();
+          const doTs = now - lastTypeset > 900; if (doTs) lastTypeset = now;
+          renderMD(n.liveEl, text, doTs, figs);
+          const th = n.cardEl && n.cardEl.querySelector(".thread");
+          if (th && th.scrollHeight - th.scrollTop - th.clientHeight < 80) th.scrollTop = th.scrollHeight;
+        }
+      } };
+    if (S.imagesOK) { try { opts.images = [await cropBlob(n)]; } catch { /* fall back to text only */ } }
+    const tools = [];
+    if (S.toolsOK) tools.push(makeMarginTool(n, { k: 0 }));
+    if (plot) tools.push(makePlotTool(n, figs, rerender));
+    if (tools.length) opts.tools = tools;
+    const res = await S.sample(buildInput(n), opts);
+    const by = (res.modelApplied === M.id ? M.label
+      : "Answered by a " + (res.modelTierApplied === "complex" ? "top-tier" : res.modelTierApplied === "quick" ? "fast" : "standard") + " model (" + M.label + " wasn't available)") + (S.concise ? " · concise" : "");
+    n.messages.push(withFigs({ role: "assistant", model: by, content: res.text + (res.truncated ? "\n\n*(The answer was cut short. Ask a narrower follow-up for the rest.)*" : "") }, figs));
+  } catch (e) {
+    const code = e && e.code;
+    if (e && e.text && code !== "refused") {
+      n.messages.push(withFigs({ role: "assistant", content: e.text + "\n\n*(" + (code === "cancelled" ? "Stopped" : "Interrupted") + " here.)*" }, figs));
+    } else {
+      n.error = errText(code);
+      if (code === "tools_unavailable") { S.toolsOK = false; n.error = "Plots aren't available in this view. Press Retry to get an answer without one."; }
+    }
+    if (code === "images_unavailable") { S.imagesOK = false; n.error = "Images can't be sent from this view. Press Retry to ask with text only."; }
+  }
+  n.pending = false; n.streaming = ""; n.ctl = null; n.status = ""; n.liveFigs = null;
+  save(n);
+  syncMarkState(n); renderThread(n); renderList();
+}
+
+/* ---------- start ---------- */
+window.addEventListener("resize", () => { for (const id of S.openIds) placeCard(S.notes.get(id)); if (S.composer) placeComposer(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && S.composer) closeComposer(true); });
+/* click anywhere outside an answer card minimizes it (its numbered box stays on the page) */
+document.addEventListener("pointerdown", (e) => {
+  const t = e.target;
+  if (!(t instanceof Element) || t.closest(".card, .mark, .composer, header.bar, .toast")) return;
+  for (const id of [...S.openIds]) closeCard(S.notes.get(id));
+  if (S.composer && !S.composer.el.querySelector("textarea").value.trim()) closeComposer(true);
+});
+async function pythonCheck() {
+  const box = document.createElement("div"); box.className = "pycheck";
+  box.innerHTML = '<b>Python check</b><div class="log"></div>';
+  document.body.appendChild(box);
+  const log = (m) => { const d = document.createElement("div"); d.textContent = m; box.querySelector(".log").appendChild(d); };
+  PY.listeners.add(log);
+  log("Worker support: " + (typeof Worker) + ".");
+  try { await WebAssembly.compile(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0])); log("WebAssembly allowed"); } catch (e) { log("WebAssembly BLOCKED: " + (e && e.message || e)); }
+  try { const r = await fetch(new URL("py/pyodide-lock.json", location.href)); log("Python files reachable: status " + r.status); } catch (e) { log("Python files NOT reachable: " + (e && e.message || e)); }
+  log("Starting the worker…");
+  const t0 = Date.now();
+  const r = await runPython("import numpy as np\nx = np.linspace(0, 3, 50)\nplt.plot(x, x / (1 + x))\nplt.title('Python works')", null);
+  if (r.ok) {
+    log("Success in " + Math.round((Date.now() - t0) / 1000) + " s.");
+    const img = document.createElement("img"); img.src = "data:image/png;base64," + r.png; img.style.maxWidth = "320px"; box.appendChild(img);
+  } else log("FAILED: " + r.error);
+}
+
+(async function start() {
+  if (location.hash === "#python-check") setTimeout(pythonCheck, 0);
+  if (!window.pdfjsLib) { centerMsg("The PDF reader didn't load", "Check your connection and reload the page."); return; }
+  await initCaps();
+  if (!S.sample) banner("Open this page inside Claude to ask questions. You can still read and look at saved notes.");
+  S.papers = await loadPapers();
+  fillPaperSelect();
+  if (!S.papers.length) { centerMsg("Mark it, ask it", "Open a PDF, drag a box over anything unclear, and type your question. The answer appears right on the page.", true); return; }
+  const last = LS.get("mq.last", null);
+  const p = S.papers.find((x) => x.id === last) || S.papers[0];
+  openPaper(p);
+})();
+</script>
+</body>
+</html>

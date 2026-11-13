@@ -1,0 +1,23 @@
+Margin Questions bundles or rebuilds the third-party parts below, all unmodified. The page itself (index.html,
+py/worker.js) and tools/pack.py are under the MIT licence in LICENSE.
+
+In this repository
+- fonts/DejaVuSansCondensed.ttf: DejaVu Sans Condensed 2.37, Bitstream Vera and Arev font licences, DejaVu changes in
+  the public domain. Full text in fonts/LICENSE-DejaVu.txt, which must travel with the font.
+  https://github.com/dejavu-fonts/dejavu-fonts
+
+Rebuilt by tools/pack.py from https://cdn.jsdelivr.net/pyodide/v0.26.4/full/ (not in git)
+- pyodide.js, pyodide.asm.js, pyodide.asm.wasm, pyodide-lock.json: Pyodide 0.26.4, MPL-2.0. Source:
+  https://github.com/pyodide/pyodide/tree/0.26.4. The runtime contains CPython (PSF-2.0) and Emscripten's runtime
+  (MIT OR NCSA); other libraries linked into it are listed in Pyodide's own repository, not here.
+- python_stdlib.zip: the CPython 3.12.1 standard library, PSF-2.0. https://github.com/python/cpython/blob/v3.12.1/LICENSE
+- Each wheel carries its own licence file in its .dist-info folder:
+  cycler 0.12.1 (BSD-3-Clause), fonttools 4.51.0 (MIT), kiwisolver 1.4.5 (BSD-3-Clause), matplotlib 3.5.2
+  (the Matplotlib licence, PSF-based, as its metadata states), matplotlib-pyodide 0.2.2 (MPL-2.0), numpy 1.26.4
+  (BSD-3-Clause), packaging 23.2 (Apache-2.0 OR BSD-2-Clause), pillow 10.2.0 (HPND), pyparsing 3.1.2 (MIT),
+  python-dateutil 2.9.0.post0 (Apache-2.0 and BSD-3-Clause, as its metadata states), pytz 2024.1 (MIT), six 1.16.0
+  (MIT).
+
+Loaded by the page from public CDNs at run time (not redistributed): pdf-lib 1.17.1 and @pdf-lib/fontkit 1.1.1 (both
+MIT), pdf.js, marked, DOMPurify, MathJax, and the IBM Plex fonts from Google Fonts.
+

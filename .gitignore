@@ -1,0 +1,4 @@
+py/data/
+py/pyodide*
+fonts/note-font.json
+__pycache__/
