@@ -41,3 +41,7 @@ Newest at the bottom. Each entry: symptom → root cause → fix.
 - 2026-11-13. Symptom: the history check flagged the `CLAUDE.md` import line as an e-mail address. Root cause: in a
   diff the line starts with a plus sign, which is a valid local part right before `@AGENTS.md`. Fix: `CLAUDE.md` puts
   a word before the import (`See @AGENTS.md`); never write the plus sign and the import side by side.
+- 2026-11-13. Symptom: the clean-check passed, but a fresh read before the first push found the prompt's sample margin
+  note was an equation copied from the author's own paper. Root cause: the deny-list catches names, paths and ids,
+  not borrowed content. Fix: a textbook example (`ρ = 1/β − 1`), folded into the unpushed commit so history has no
+  copy. Before a push, have a fresh reader look for borrowed text and examples too.
