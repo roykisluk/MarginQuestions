@@ -46,6 +46,26 @@ make an editor, read or write them. Sharing the link with a viewer shows them an
 
 `git pull`, run `python3 tools/pack.py` again, and republish `index.html` (and any changed file) to the same URL.
 
+## Edit mode
+
+For a document you are writing (slides, a draft), not one you are reading. Switch on **Edit mode** in the header, draw
+a box over what should change and type the change ("cut this to one line"). The box is saved in orange and nothing is
+asked: the page calls no model. Then ask Claude Code, in the folder that holds the document's source, to apply your
+Margin Questions edits on that PDF. A box you add to later opens again.
+
+What Claude Code reads and writes, with the `ArtifactData` tool on your copy's URL:
+
+1. In `papers`, the paper whose `name` is the PDF's file name; keep its `id`.
+2. In `notes`, the documents with that `paperId`, `kind` `"edit"` and `done` not `true`. Each has `page` (from 1),
+   `rect` (`x`, `y`, `w`, `h` as fractions of the page, from its top left) and `messages`, where every `user` message
+   is part of the request.
+3. It finds the text under each box in the PDF, finds the matching place in the source and makes the change.
+4. It writes back to each note it applied: appends `{"role": "assistant", "content": "<what changed>", "model":
+   "Claude Code"}` to `messages` and sets `done` to `true`, pinned to the version it read. The page shows the box dimmed
+   and the reply in its card after a reload.
+
+Rebuilding the document changes the PDF, so open the new build as a new paper for the next round of edits.
+
 ## Limits
 
 - Every test ran on one account, the author's. Nothing yet shows that it works on another account.

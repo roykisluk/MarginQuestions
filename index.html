@@ -20,6 +20,7 @@
   --card: #ffffff;
   --danger: #b3261e;
   --mark: #2a52be;
+  --edit: #c2410c;
   --ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --prose: "IBM Plex Serif", Georgia, "Times New Roman", serif;
   color-scheme: light;
@@ -27,13 +28,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --desk: #12151b; --panel: #1a1e26; --ink: #e5e8ef; --muted: #9aa2b3; --line: #2c323d;
-    --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72;
+    --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72; --edit: #fb923c;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --desk: #12151b; --panel: #1a1e26; --ink: #e5e8ef; --muted: #9aa2b3; --line: #2c323d;
-  --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72;
+  --accent: #8aa5f7; --accent-soft: rgba(138, 165, 247, .16); --card: #1f242d; --danger: #f07a72; --edit: #fb923c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -99,6 +100,11 @@ select.btn { max-width: 340px; }
 .mark .tag { position: absolute; left: -2px; top: -22px; height: 20px; min-width: 20px; padding: 0 6px; border-radius: 4px 4px 4px 0; background: var(--mark); color: #fff; font: 600 12px/20px var(--ui); text-align: center; }
 .mark.draft { border-style: dashed; cursor: crosshair; }
 .mark.pending .tag::after { content: " …"; }
+/* Edit mode: change requests for Claude Code, in orange; dimmed once applied */
+.mark.edit { border-color: var(--edit); background: transparent; }
+.mark.edit .tag, .ni.edit .num { background: var(--edit); }
+.mark.edit.done, .ni.edit.done { opacity: .45; }
+.toggle.edit:has(input:checked) { border-color: var(--edit); background: transparent; color: var(--edit); }
 
 .card, .composer { position: absolute; z-index: 5; width: 420px; max-width: calc(100% - 16px); background: var(--card); color: var(--ink);
   border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 34px rgba(0,0,0,.22); cursor: auto; }
@@ -199,6 +205,7 @@ input[type=file] { display: none; }
     <input type="file" id="fileIn" accept="application/pdf,.pdf">
     <span class="grow"></span>
     <label class="toggle" title="Short answers: a few sentences, only the key equation"><input type="checkbox" id="concise"> Concise</label>
+    <label class="toggle edit" title="New boxes become change requests: saved for Claude Code to apply, not answered here"><input type="checkbox" id="editMode"> Edit mode</label>
     <select class="btn" id="modelSel" aria-label="Model used for answers" title="Model used for new answers">
       <option value="opus" title="Most careful">Opus 5.5</option>
       <option value="sonnet" title="Faster">Sonnet 5.5</option>
@@ -267,6 +274,10 @@ $("modelSel").onchange = (e) => { S.model = e.target.value; LS.set("mq.model", S
 S.concise = !!LS.get("mq.concise", false);
 $("concise").checked = S.concise;
 $("concise").onchange = (e) => { S.concise = e.target.checked; LS.set("mq.concise", S.concise); };
+
+S.edit = !!LS.get("mq.edit", false);
+$("editMode").checked = S.edit;
+$("editMode").onchange = (e) => { S.edit = e.target.checked; LS.set("mq.edit", S.edit); };
 
 S.autoMargin = LS.get("mq.autoMargin2", false) === true;
 $("autoMargin").checked = S.autoMargin;
@@ -917,15 +928,17 @@ function openComposer(p, rect, draftEl) {
   const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = num; draftEl.appendChild(tag);
   const el = document.createElement("div");
   el.className = "composer";
-  const canAsk = !!S.sample;
+  const edit = S.edit;
+  if (edit) draftEl.classList.add("edit");
+  const canAsk = edit || !!S.sample;
   el.innerHTML = `
-    <header><span class="t">Note ${num}</span><span class="s" style="color:var(--muted);font-size:12px">p. ${p.num}</span><span class="grow" style="flex:1"></span><button class="iconbtn" data-x="cancel" aria-label="Cancel">✕</button></header>
+    <header><span class="t">${edit ? "Edit" : "Note"} ${num}</span><span class="s" style="color:var(--muted);font-size:12px">p. ${p.num}</span><span class="grow" style="flex:1"></span><button class="iconbtn" data-x="cancel" aria-label="Cancel">✕</button></header>
     <div class="body">
-      <label for="cq" class="kbd">What's unclear here?</label>
-      <textarea id="cq" class="defq" rows="3" placeholder="${esc(DEFAULT_Q)}"></textarea>
-      <div class="row"><span class="kbd grow" data-hint="c">${sendHint(" · Esc to cancel")}</span>
+      <label for="cq" class="kbd">${edit ? "What should change here? Saved for Claude Code; nothing is asked now." : "What's unclear here?"}</label>
+      <textarea id="cq" class="${edit ? "" : "defq"}" rows="3" placeholder="${edit ? "e.g. cut this to one line" : esc(DEFAULT_Q)}"></textarea>
+      <div class="row"><span class="kbd grow" data-hint="c">${edit ? "↵ save · ⇧↵ new line · Esc to cancel" : sendHint(" · Esc to cancel")}</span>
         <button class="btn" data-x="cancel">Cancel</button>
-        <button class="btn primary" data-x="ask" title="${S.toolsOK ? MOD + "↵ asks with a plot" : ""}" ${canAsk ? "" : "disabled"}>Ask Claude</button></div>
+        <button class="btn primary" data-x="ask" title="${!edit && S.toolsOK ? MOD + "↵ asks with a plot" : ""}" ${canAsk ? "" : "disabled"}>${edit ? "Save edit" : "Ask Claude"}</button></div>
       ${canAsk ? "" : '<div class="err">Asking Claude only works when this page is opened inside Claude.</div>'}
     </div>`;
   p.overlay.appendChild(el);
@@ -936,6 +949,12 @@ function openComposer(p, rect, draftEl) {
   setTimeout(() => ta.focus({ preventScroll: true }), 0);
   el.querySelectorAll('[data-x="cancel"]').forEach((b) => (b.onclick = () => closeComposer(true)));
   const go = (plot) => {
+    if (edit) {
+      const t = ta.value.trim(); if (!t) { ta.focus(); return; }
+      const c = S.composer; closeComposer(false); c.draftEl.remove();
+      createEdit(c.p, c.rect, c.num, t);
+      return;
+    }
     if (!S.sample) return;
     const q = ta.value.trim() || DEFAULT_Q;
     const useHistory = $("histDefault").checked;
@@ -946,7 +965,7 @@ function openComposer(p, rect, draftEl) {
   };
   el.querySelector('[data-x="ask"]').onclick = () => go(false);
   ta.addEventListener("keydown", (e) => {
-    if (isSendKey(e)) { e.preventDefault(); go(wantsPlotKey(e)); }
+    if (isSendKey(e)) { e.preventDefault(); go(!edit && wantsPlotKey(e)); }
     if (e.key === "Escape") { e.preventDefault(); closeComposer(true); }
   });
   dragByHeader(el, el.querySelector("header"), p, null);
@@ -1024,13 +1043,23 @@ function createNote(p, rect, num, question, useHistory, plot) {
   openCard(n);
   ask(n, question, plot);
 }
+/* Edit mode: a change request for Claude Code. Saved as it is; the page asks no model.
+   Claude Code reads notes with kind "edit" and done false, applies them, then appends an
+   assistant message saying what it changed and sets done: true (README, "Edit mode"). */
+function createEdit(p, rect, num, text) {
+  const n = { id: uid("n"), paperId: S.paper.id, page: p.num, rect, num, kind: "edit", done: false,
+    messages: [{ role: "user", content: text }], useHistory: false, createdAt: Date.now() };
+  S.notes.set(n.id, n);
+  drawMark(n); save(n); renderList();
+  toast(S.paper.local ? "Edit kept for this visit only: this PDF isn't saved." : "Edit " + num + " saved for Claude Code.");
+}
 function drawMark(n) {
   const p = S.pages[n.page - 1]; if (!p) return;
   if (n.markEl) n.markEl.remove();
   const m = document.createElement("div");
-  m.className = "mark"; setBox(m, n.rect);
+  m.className = "mark" + (n.kind === "edit" ? " edit" : "") + (n.done ? " done" : ""); setBox(m, n.rect);
   m.innerHTML = `<span class="tag">${n.num}</span>`;
-  m.title = "Note " + n.num + " — click to show or hide";
+  m.title = (n.kind === "edit" ? "Edit " : "Note ") + n.num + " — click to show or hide";
   m.addEventListener("pointerdown", (e) => e.stopPropagation());
   m.onclick = (e) => { e.stopPropagation(); S.openIds.has(n.id) ? closeCard(n) : openCard(n); };
   p.overlay.appendChild(m);
@@ -1064,18 +1093,18 @@ function buildCard(n) {
   const el = document.createElement("div");
   el.className = "card";
   el.innerHTML = `
-    <header><span class="t">Note ${n.num}</span><span class="s">p. ${n.page}</span><span class="grow"></span>
-      ${S.toolsOK ? '<button class="iconbtn" data-x="margin" title="Ask Claude to write a short note in the paper\'s margin">+ Margin</button>' : ""}
+    <header><span class="t">${n.kind === "edit" ? "Edit" : "Note"} ${n.num}</span><span class="s">p. ${n.page}</span><span class="grow"></span>
+      ${S.toolsOK && n.kind !== "edit" ? '<button class="iconbtn" data-x="margin" title="Ask Claude to write a short note in the paper\'s margin">+ Margin</button>' : ""}
       <button class="iconbtn" data-x="copy" title="Copy the answer">Copy</button>
       <button class="iconbtn" data-x="del" title="Delete this note">Delete</button>
       <button class="iconbtn" data-x="close" title="Hide (the box stays)" aria-label="Hide">—</button></header>
     <div class="thread"></div>
     <div class="followup">
-      <textarea rows="1" placeholder="Ask a follow-up…" aria-label="Follow-up question"></textarea>
-      <div class="row"><span class="kbd grow" data-hint="f">${sendHint()}</span>
+      <textarea rows="1" placeholder="${n.kind === "edit" ? "Add to this edit…" : "Ask a follow-up…"}" aria-label="${n.kind === "edit" ? "Add to this edit" : "Follow-up question"}"></textarea>
+      <div class="row"><span class="kbd grow" data-hint="f">${n.kind === "edit" ? "↵ save · ⇧↵ new line" : sendHint()}</span>
         <button class="btn" data-x="stop" hidden>Stop</button>
         <button class="btn" data-x="retry" hidden>Retry</button>
-        <button class="btn primary" data-x="send" title="${S.toolsOK ? MOD + "↵ asks with a plot" : ""}">Ask</button></div>
+        <button class="btn primary" data-x="send" title="${n.kind !== "edit" && S.toolsOK ? MOD + "↵ asks with a plot" : ""}">${n.kind === "edit" ? "Save" : "Ask"}</button></div>
     </div>`;
   p.overlay.appendChild(el);
   stopDrawing(el);
@@ -1083,6 +1112,12 @@ function buildCard(n) {
   n.cardEl = el;
   const ta = el.querySelector("textarea");
   const send = (plot) => {
+    if (n.kind === "edit") { // more instructions for the same edit; it is open again until Claude Code applies it
+      const t = ta.value.trim(); if (!t) return;
+      ta.value = ""; n.messages.push({ role: "user", content: t }); n.done = false;
+      save(n); drawMark(n); syncMarkState(n); renderThread(n); renderList();
+      return;
+    }
     const q = ta.value.trim(); if (!q || n.pending || !S.sample) return;
     ta.value = ""; ask(n, q, !!plot);
   };
@@ -1118,7 +1153,7 @@ function renderThread(n) {
   pairs.forEach((pr, i) => {
     const d = document.createElement("div"); d.className = "qa";
     const q = document.createElement("div"); q.className = "q";
-    q.innerHTML = `<b>${i === 0 ? "You asked" : "Follow-up"}:</b> ` + esc(pr.q || "(explain this passage)");
+    q.innerHTML = `<b>${n.kind === "edit" ? (i === 0 ? "Change" : "Also") : i === 0 ? "You asked" : "Follow-up"}:</b> ` + esc(pr.q || "(explain this passage)");
     const a = document.createElement("div"); a.className = "ans";
     d.append(q, a); th.appendChild(d);
     const isLast = i === pairs.length - 1;
@@ -1130,15 +1165,18 @@ function renderThread(n) {
       st.textContent = n.status || "Thinking… careful answers can take up to a minute.";
       d.appendChild(st);
       n.liveEl = a; n.statusEl = st;
+    } else if (n.kind === "edit") {
+      if (isLast) a.innerHTML = `<div class="hint">Waiting for Claude Code. Reload after it applies the edit to see its reply.</div>`;
     } else if (isLast) {
       a.innerHTML = `<div class="err">${esc(n.error || "No answer yet.")}</div>`;
     }
   });
   const pending = !!n.pending;
   const lastIsUser = n.messages.length && n.messages[n.messages.length - 1].role === "user";
+  const isEdit = n.kind === "edit";
   el.querySelector('[data-x="stop"]').hidden = !pending;
-  el.querySelector('[data-x="retry"]').hidden = pending || !lastIsUser || !S.sample;
-  el.querySelector('[data-x="send"]').disabled = pending || !S.sample;
+  el.querySelector('[data-x="retry"]').hidden = isEdit || pending || !lastIsUser || !S.sample;
+  el.querySelector('[data-x="send"]').disabled = !isEdit && (pending || !S.sample);
   if (pending) th.scrollTop = th.scrollHeight;
 }
 function deleteNote(n) {
@@ -1156,6 +1194,7 @@ function save(n) {
   n.updatedAt = Date.now();
   const body = { paperId: n.paperId, page: n.page, rect: n.rect, num: n.num, messages: n.messages, useHistory: !!n.useHistory, createdAt: n.createdAt, updatedAt: n.updatedAt };
   if (n.pos) body.pos = n.pos;
+  if (n.kind === "edit") { body.kind = "edit"; body.done = !!n.done; }
   n.saving = (n.saving || Promise.resolve()).then(() => S.db.collection("notes").doc(n.id).set(body)).catch((e) => {
     toast(e && e.code === "quota_exceeded" ? "Storage is full, so this note wasn't saved." : "This note didn't save. It stays here until you reload.");
   });
@@ -1168,9 +1207,11 @@ function renderList() {
   list.innerHTML = "";
   for (const n of notes) {
     const b = document.createElement("button");
-    b.className = "ni" + (n.id === S.activeId ? " active" : "") + (n.pending ? " pending" : "");
+    const isEdit = n.kind === "edit";
+    b.className = "ni" + (n.id === S.activeId ? " active" : "") + (n.pending ? " pending" : "") + (isEdit ? " edit" : "") + (n.done ? " done" : "");
     const q = (n.messages[0] && n.messages[0].content) || "Explain this passage";
-    b.innerHTML = `<span class="num">${n.num}</span><span class="pg">Page ${n.page}${n.messages.length > 2 ? " · " + Math.ceil(n.messages.length / 2) + " questions" : ""}</span><span class="q">${esc(q)}</span>`;
+    const meta = isEdit ? (n.done ? " · edit applied" : " · edit") : n.messages.length > 2 ? " · " + Math.ceil(n.messages.length / 2) + " questions" : "";
+    b.innerHTML = `<span class="num">${n.num}</span><span class="pg">Page ${n.page}${meta}</span><span class="q">${esc(q)}</span>`;
     b.onclick = () => {
       openCard(n);
       const p = S.pages[n.page - 1];
@@ -1308,7 +1349,7 @@ function buildFirstTurn(n) {
   const region = regionText(p, n.rect);
   let earlier = "";
   if (n.useHistory) {
-    const others = [...S.notes.values()].filter((o) => o.id !== n.id && o.page === n.page && o.num < n.num && o.messages.some((m) => m.role === "assistant"))
+    const others = [...S.notes.values()].filter((o) => o.id !== n.id && o.kind !== "edit" && o.page === n.page && o.num < n.num && o.messages.some((m) => m.role === "assistant"))
       .sort((a, b) => a.num - b.num).slice(-6);
     if (others.length) {
       earlier = others.map((o) => {

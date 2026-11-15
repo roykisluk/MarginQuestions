@@ -45,3 +45,8 @@ Newest at the bottom. Each entry: symptom → root cause → fix.
   note was an equation copied from the author's own paper. Root cause: the deny-list catches names, paths and ids,
   not borrowed content. Fix: a textbook example (`ρ = 1/β − 1`), folded into the unpushed commit so history has no
   copy. Before a push, have a fresh reader look for borrowed text and examples too.
+- 2026-11-15. Symptom: a fresh clone was about to commit under the machine's global e-mail, which is personal. Root
+  cause: the history uses the GitHub no-reply address, set nowhere in the repository, and the built-in clean-check
+  patterns let the commit author through (they read files, messages and diffs, not author fields). Fix: after cloning,
+  `git config user.email` to the no-reply address the history uses (`git log -1 --format=%ae`). On a machine without
+  the deny-list the clean-check warns and checks only its built-in patterns.
