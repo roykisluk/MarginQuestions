@@ -66,6 +66,23 @@ What Claude Code reads and writes, with the `ArtifactData` tool on your copy's U
 
 Rebuilding the document changes the PDF, so open the new build as a new paper for the next round of edits.
 
+## Inside another artifact
+
+The page can be the PDF reader of another claude.ai artifact of yours. Publish `index.html` there under another name
+(say `reader.html`) with the files from step 2 above, add this page's capabilities to that artifact's own, and send the
+viewer to it from the main page:
+
+```
+location.assign("reader.html#" + new URLSearchParams({ file: "papers/smith-2020.pdf", name: "Smith (2020)", page: 12, back: "index.html" }))
+```
+
+- `file`: a PDF published beside the page. It must be a relative path of letters, digits, `.`, `_`, `-` and `/`.
+- `name` (optional): the title shown for it. `page` (optional): open at this page instead of where you stopped.
+- `back` (optional): a page of the same artifact; a Back button leads to it.
+
+The PDF is saved in the paper list like an uploaded one, so its notes and margin answers come back the next time.
+They are stored in the artifact that holds the page.
+
 ## Limits
 
 - Every test ran on one account, the author's. Nothing yet shows that it works on another account.

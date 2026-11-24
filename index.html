@@ -71,6 +71,7 @@ header.bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
 .btn.icon .badge { position: absolute; top: -6px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: #fff; font: 600 10px/16px var(--ui); text-align: center; font-variant-numeric: tabular-nums; }
 .btn.icon.busy svg { animation: pulse 1.1s ease-in-out infinite; }
 select.btn { max-width: 340px; }
+a.btn { color: inherit; text-decoration: none; }
 .zoom { display: flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
 .zoom span { min-width: 46px; text-align: center; color: var(--muted); }
 .hint { color: var(--muted); font-size: 13px; }
@@ -193,6 +194,7 @@ input[type=file] { display: none; }
 <div class="app" id="app">
   <header class="bar">
     <button class="btn ghost" id="sideBtn" title="Show or hide the notes list" aria-label="Toggle notes list">☰</button>
+    <a class="btn" id="backLink" hidden>← Back</a>
     <div class="brand"><span class="dot" aria-hidden="true"></span>Margin Questions</div>
     <select class="btn" id="paperSel" aria-label="Paper" hidden></select>
     <button class="btn" id="openBtn">Open PDF…</button>
@@ -358,6 +360,21 @@ async function initCaps() {
   S.persist = !!(db);
 }
 
+/* ---------- a PDF published beside the page, named in the address ---------- */
+/* open-hash:start */
+// "#file=<path>.pdf&name=<title>&page=<n>&back=<page>.html". Paths must stay inside the page's own folder.
+function parseOpenHash(hash) {
+  const q = new URLSearchParams(String(hash || "").replace(/^#/, ""));
+  const inside = (p, ext) => !!p && /^[A-Za-z0-9][A-Za-z0-9._\/-]*$/.test(p) && !p.includes("..") && !p.includes("//") && p.endsWith(ext);
+  const file = q.get("file");
+  if (!inside(file, ".pdf")) return null;
+  const page = /^[1-9]\d*$/.test(q.get("page") || "") ? Number(q.get("page")) : null;
+  const b = (q.get("back") || "").match(/^([^#]*)(#[A-Za-z0-9-]*)?$/);
+  const back = b && inside(b[1], ".html") ? b[0] : null;
+  return { file, id: "f_" + file.replace(/[^A-Za-z0-9]+/g, "_"), name: q.get("name") || file.split("/").pop().replace(/\.pdf$/, ""), page, back };
+}
+/* open-hash:end */
+
 /* ---------- papers ---------- */
 async function loadPapers() {
   if (!S.db) return [];
@@ -398,7 +415,7 @@ $("fileIn").onchange = async (e) => {
   await openPaper({ id: uid("local"), name, local: true }, buf);
 };
 
-async function openPaper(paper, buf) {
+async function openPaper(paper, buf, page) {
   closeComposer();
   S.restoring = true; clearTimeout(posTimer); clearTimeout(posRemoteTimer);
   S.pages = [];
@@ -410,7 +427,7 @@ async function openPaper(paper, buf) {
   centerMsg("Opening " + (paper.name || "PDF") + "…");
   try {
     if (!buf) {
-      const r = await fetch("/_blob/" + paper.assetId);
+      const r = await fetch(paper.file || "/_blob/" + paper.assetId);
       if (!r.ok) throw new Error("The PDF file is missing (" + r.status + ").");
       buf = await r.arrayBuffer();
     }
@@ -426,7 +443,7 @@ async function openPaper(paper, buf) {
   await buildPages();
   extractText();
   S.restoring = true;
-  const restored = restorePos(paper);
+  const restored = page >= 1 && page <= S.pages.length ? (scrollToPos(page, 0), true) : restorePos(paper);
   await loadNotes();
   await loadMargins();
   if (!restored) goToLatestNote();
@@ -1538,6 +1555,21 @@ async function pythonCheck() {
   if (!S.sample) banner("Open this page inside Claude to ask questions. You can still read and look at saved notes.");
   S.papers = await loadPapers();
   fillPaperSelect();
+  const o = parseOpenHash(location.hash);
+  if (o) {
+    if (o.back) { $("backLink").href = o.back; $("backLink").hidden = false; }
+    let p = S.papers.find((x) => x.id === o.id);
+    if (!p) {
+      p = { id: o.id, name: o.name, file: o.file, createdAt: Date.now() };
+      try {
+        if (!S.db) throw new Error("no database");
+        await S.db.collection("papers").doc(p.id).set({ name: p.name, file: p.file, createdAt: p.createdAt });
+        S.papers.unshift(p); fillPaperSelect();
+      } catch { p.local = true; }
+    }
+    openPaper(p, null, o.page);
+    return;
+  }
   if (!S.papers.length) { centerMsg("Mark it, ask it", "Open a PDF, drag a box over anything unclear, and type your question. The answer appears right on the page.", true); return; }
   const last = LS.get("mq.last", null);
   const p = S.papers.find((x) => x.id === last) || S.papers[0];

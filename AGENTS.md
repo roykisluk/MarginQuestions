@@ -50,3 +50,11 @@ Newest at the bottom. Each entry: symptom → root cause → fix.
   patterns let the commit author through (they read files, messages and diffs, not author fields). Fix: after cloning,
   `git config user.email` to the no-reply address the history uses (`git log -1 --format=%ae`). On a machine without
   the deny-list the clean-check warns and checks only its built-in patterns.
+- 2026-11-24. The page can now run as a second page inside another artifact and open a PDF published beside it
+  (`#file=…&name=…&page=…&back=…`, parsed by `parseOpenHash`; test: `node --test tools/open-hash.test.mjs`, which loads
+  the function from between the `open-hash` marker comments, so keep them). Checked on claude.ai first with a
+  two-page test artifact: a second HTML page gets `window.claude` and every declared capability, a `key=value` hash
+  arrives when the main page navigates with `location.assign`, and a link back to `index.html` works. An `<iframe>` of
+  the second page got `window.claude` but saved nothing to the database in the 8 seconds watched; not looked into.
+  Such a paper has `file` instead of `assetId` in its `papers` document, and its id is made from the path, so opening
+  it again finds the same notes.
